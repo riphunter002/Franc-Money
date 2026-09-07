@@ -9,6 +9,8 @@ const transactionSchema = z.object({
   type: z.enum(['INCOME', 'EXPENSE'], {
     errorMap: () => ({ message: 'O tipo deve ser estritamente INCOME ou EXPENSE.' })
   }),
+  // Opcional: se não vier, o Prisma usa o default (now()) do schema
+  date: z.coerce.date({ errorMap: () => ({ message: 'Data inválida.' }) }).optional(),
   // .nullable() permite enviar explicitamente { category_id: null } para remover
   // a categoria de uma transação (diferente de simplesmente omitir o campo, que
   // significa "não altere o valor atual" numa atualização parcial)
@@ -20,11 +22,11 @@ const updateTransactionSchema = transactionSchema.partial();
 module.exports = {
   async create(req, res, next) {
     try {
-      const { title, description, amount, type, category_id } = transactionSchema.parse(req.body);
+      const { title, description, amount, type, date, category_id } = transactionSchema.parse(req.body);
       const user_id = req.userId;
 
       const transaction = await prisma.transaction.create({
-        data: { title, description, amount, type, user_id, category_id },
+        data: { title, description, amount, type, date, user_id, category_id },
       });
 
       return res.status(201).json(transaction);
@@ -114,7 +116,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const user_id = req.userId; // ID extraído do token JWT
-      const { title, description, amount, type, category_id } = updateTransactionSchema.parse(req.body);
+      const { title, description, amount, type, date, category_id } = updateTransactionSchema.parse(req.body);
 
       // Verifica se a transação existe E pertence a este usuário
       const existingTransaction = await prisma.transaction.findFirst({
@@ -127,7 +129,7 @@ module.exports = {
 
       const transaction = await prisma.transaction.update({
         where: { id },
-        data: { title, description, amount, type, category_id },
+        data: { title, description, amount, type, date, category_id },
       });
 
       return res.status(200).json(transaction);

@@ -73,10 +73,15 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
+// timeZone: "UTC" é proposital: a data da transação é só um "dia do
+// calendário" (vem do <input type="date"> como meia-noite UTC), sem
+// hora real associada. Sem isso, o fuso do navegador pode exibir o
+// dia anterior (ex.: meia-noite UTC vira 21h do dia anterior no Brasil).
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
+  timeZone: "UTC",
 });
 
 // Evita que texto vindo do banco quebre o HTML por acidente (proteção básica

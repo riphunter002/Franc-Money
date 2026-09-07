@@ -128,8 +128,18 @@ const formError = document.getElementById("txFormError");
 const idInput = document.getElementById("txId");
 const titleInput = document.getElementById("txTitle");
 const amountInput = document.getElementById("txAmount");
+const dateInput = document.getElementById("txDate");
 const categorySelect = document.getElementById("txCategory");
 const descriptionInput = document.getElementById("txDescription");
+
+// Data de hoje no fuso horário local, no formato que o <input type="date"> espera (YYYY-MM-DD).
+// Não dá pra usar new Date().toISOString() direto: ela é sempre em UTC, então perto da
+// meia-noite poderia mostrar o dia errado dependendo do fuso do usuário.
+function todayLocalDateString() {
+  const now = new Date();
+  const localMidnight = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localMidnight.toISOString().slice(0, 10);
+}
 
 let lastFocusedElement = null;
 
@@ -187,9 +197,12 @@ async function openModal(transaction = null) {
   if (isEditing) {
     titleInput.value = transaction.title;
     amountInput.value = Number(transaction.amount);
+    dateInput.value = transaction.date.slice(0, 10);
     descriptionInput.value = transaction.description || "";
     const typeRadio = form.querySelector(`input[name="txType"][value="${transaction.type}"]`);
     if (typeRadio) typeRadio.checked = true;
+  } else {
+    dateInput.value = todayLocalDateString();
   }
 
   overlay.hidden = false;
@@ -231,6 +244,7 @@ form.addEventListener("submit", async (event) => {
   const title = titleInput.value.trim();
   const amountValue = Number(amountInput.value);
   const type = form.querySelector('input[name="txType"]:checked')?.value;
+  const date = dateInput.value;
   const categoryId = categorySelect.value;
   const description = descriptionInput.value.trim();
 
@@ -251,7 +265,13 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  const payload = { title, amount: amountValue, type };
+  if (!date) {
+    setFormError("Informe a data da transação.");
+    dateInput.focus();
+    return;
+  }
+
+  const payload = { title, amount: amountValue, type, date };
   if (description) payload.description = description;
 
   // Ao criar, simplesmente omitimos o campo se não houver categoria selecionada.

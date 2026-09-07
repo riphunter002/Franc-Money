@@ -25,6 +25,8 @@ model User {
 model Category {
   id          String        @id @default(uuid())
   name        String
+  type        String        @default("EXPENSE")
+  color       String        @default("#8b93a1")
   user_id     String
   created_at  DateTime      @default(now())
 

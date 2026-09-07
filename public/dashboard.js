@@ -127,7 +127,10 @@ function computeMonthlyBalances(transactions, monthsCount = 6) {
     if (date < windowStart) {
       balanceBeforeWindow += signedAmount;
     } else {
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      // getUTCFullYear/getUTCMonth, não getFullYear/getMonth: a data da
+      // transação é meia-noite UTC, então os getters locais podem jogar a
+      // transação pro mês anterior dependendo do fuso do navegador.
+      const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
       if (key in monthlyNet) monthlyNet[key] += signedAmount;
     }
   });

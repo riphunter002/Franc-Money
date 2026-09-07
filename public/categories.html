@@ -93,6 +93,18 @@
         </div>
 
         <form id="categoryForm" class="category-form" novalidate>
+          <fieldset class="type-toggle">
+            <legend class="modal-label">Tipo</legend>
+            <label class="type-toggle__option">
+              <input type="radio" name="categoryType" value="EXPENSE" checked />
+              <span>Despesa</span>
+            </label>
+            <label class="type-toggle__option">
+              <input type="radio" name="categoryType" value="INCOME" />
+              <span>Receita</span>
+            </label>
+          </fieldset>
+
           <div class="modal-field category-form__field">
             <label for="categoryName" class="modal-label">Nome da categoria</label>
             <input

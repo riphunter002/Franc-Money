@@ -48,6 +48,40 @@ router.get('/categories', CategoryController.list);
 /**
  * @swagger
  * /categories/{id}:
+ *   put:
+ *     summary: Atualiza o nome e/ou o tipo (receita/despesa) de uma categoria
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [INCOME, EXPENSE]
+ *     responses:
+ *       200:
+ *         description: Categoria atualizada com sucesso
+ *       404:
+ *         description: Categoria não encontrada ou acesso negado
+ */
+router.put('/categories/:id', CategoryController.update);
+
+/**
+ * @swagger
+ * /categories/{id}:
  *   delete:
  *     summary: Deleta uma categoria pelo ID
  *     tags: [Categories]

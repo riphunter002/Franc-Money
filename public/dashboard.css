@@ -837,9 +837,6 @@ a {
 }
 
 .manage-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 14px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -848,9 +845,45 @@ a {
   border-bottom: none;
 }
 
+.manage-row__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .manage-row__name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 15px;
   font-weight: 500;
+}
+
+.manage-row__edit-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.manage-row__edit-form[hidden] {
+  display: none;
+}
+
+.manage-row__edit-form .modal-input {
+  height: 40px;
+  max-width: 220px;
+}
+
+.manage-row__edit-form .type-toggle {
+  min-width: 200px;
+}
+
+.manage-row__edit-form .type-toggle__option span {
+  padding: 8px 0;
+  font-size: 13.5px;
 }
 
 .manage-row__delete {

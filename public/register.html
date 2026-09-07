@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franc Money — Entrar</title>
+  <title>Franc Money — Criar conta</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,57 +12,50 @@
     rel="stylesheet"
   />
 
+  <!-- Base compartilhada com o login (cartão, campos, botão...) -->
   <link rel="stylesheet" href="style.css" />
+  <!-- Só o que é diferente aqui: comemoração de boas-vindas -->
+  <link rel="stylesheet" href="register.css" />
 </head>
 <body>
 
-  <!-- Camada de fundo: grade financeira -->
-  <div class="scene" aria-hidden="true">
+  <!-- Camada de fundo: grade financeira + fogos de artifício -->
+  <div class="scene scene--register" aria-hidden="true">
     <div class="scene__grid"></div>
-
-    <!-- Gráfico de evolução de lucros: anima continuamente via auth.js -->
-    <svg
-      class="scene__chart"
-      id="profitChart"
-      viewBox="0 0 1440 500"
-      preserveAspectRatio="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient id="chartAreaFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#d4af37" stop-opacity="0.35" />
-          <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
-        </linearGradient>
-        <linearGradient id="chartLineStroke" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#8a6f2a" />
-          <stop offset="60%" stop-color="#f4d160" />
-          <stop offset="100%" stop-color="#fff3c4" />
-        </linearGradient>
-      </defs>
-
-      <path id="chartArea" class="scene__chart-area" fill="url(#chartAreaFill)" />
-      <path id="chartLine" class="scene__chart-line" fill="none" stroke="url(#chartLineStroke)" />
-      <circle id="chartDot" class="scene__chart-dot" r="6" />
-    </svg>
-
-    <div class="scene__glow"></div>
-    <!-- As moedas são injetadas aqui via auth.js -->
-    <div class="coin-field" id="coinField"></div>
+    <div class="scene__glow scene__glow--register"></div>
+    <!-- Foguetes e explosões são injetados aqui via register.js -->
+    <div class="fireworks-field" id="fireworksField"></div>
   </div>
 
   <!-- Conteúdo principal -->
   <main class="page">
-    <div class="login-card" role="region" aria-labelledby="brandTitle">
+    <div class="login-card register-card" role="region" aria-labelledby="brandTitle">
 
       <header class="login-card__header">
         <div class="brand">
           <span class="brand__mark" aria-hidden="true">F</span>
           <span id="brandTitle" class="brand__name">Franc Money</span>
         </div>
-        <p class="login-card__subtitle">Entre para acompanhar o seu patrimônio</p>
+        <p class="login-card__subtitle">
+          Bem-vindo(a)! Crie sua conta e comece a organizar suas finanças.
+        </p>
       </header>
 
-      <form id="loginForm" class="login-form" novalidate>
+      <form id="registerForm" class="login-form" novalidate>
+
+        <div class="field">
+          <label for="name" class="field__label">Nome</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            class="field__input"
+            placeholder="Como podemos te chamar?"
+            autocomplete="name"
+            required
+          />
+          <p class="field__error" id="nameError" role="alert"></p>
+        </div>
 
         <div class="field">
           <label for="email" class="field__label">E-mail</label>
@@ -90,24 +83,31 @@
             name="password"
             type="password"
             class="field__input"
-            placeholder="Sua senha"
-            autocomplete="current-password"
+            placeholder="Crie uma senha"
+            autocomplete="new-password"
             required
             minlength="6"
           />
           <p class="field__error" id="passwordError" role="alert"></p>
         </div>
 
-        <div class="login-form__row">
-          <label class="checkbox">
-            <input type="checkbox" id="remember" name="remember" />
-            <span>Manter conectado</span>
-          </label>
-          <a href="#" class="link">Esqueci minha senha</a>
+        <div class="field">
+          <label for="confirmPassword" class="field__label">Confirmar senha</label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            class="field__input"
+            placeholder="Repita a senha"
+            autocomplete="new-password"
+            required
+            minlength="6"
+          />
+          <p class="field__error" id="confirmPasswordError" role="alert"></p>
         </div>
 
         <button type="submit" class="btn-primary" id="submitBtn">
-          <span class="btn-primary__label">Entrar</span>
+          <span class="btn-primary__label">Criar conta</span>
           <span class="btn-primary__spinner" aria-hidden="true"></span>
         </button>
 
@@ -115,12 +115,12 @@
       </form>
 
       <footer class="login-card__footer">
-        <p>Ainda não tem conta? <a href="register.html" class="link">Criar conta</a></p>
+        <p>Já tem uma conta? <a href="index.html" class="link">Entrar</a></p>
       </footer>
 
     </div>
   </main>
 
-  <script src="auth.js"></script>
+  <script src="register.js"></script>
 </body>
 </html>

@@ -1,0 +1,112 @@
+/* ==========================================================
+   Franc Money — Cadastro
+   Estende style.css: mesma base (cartão, campos, botão), mas
+   com um fundo próprio — fogos de artifício em vez de moedas —
+   pra dar um clima de comemoração a quem está chegando agora.
+   ========================================================== */
+
+/* Brilho de fundo um pouco mais quente/vivo que o do login */
+.scene__glow--register {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 65%);
+}
+
+.fireworks-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------
+   Foguete: sobe do rodapé até o ponto onde vai estourar
+   ---------------------------------------------------------- */
+.firework-rocket {
+  position: absolute;
+  bottom: -10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 8px 10px -2px rgba(244, 209, 96, 0.9); /* rastro sutil atrás do foguete */
+  animation-name: firework-rise;
+  animation-timing-function: cubic-bezier(0.15, 0.6, 0.35, 1); /* desacelera, como um foguete de verdade */
+  animation-fill-mode: forwards;
+}
+
+@keyframes firework-rise {
+  from {
+    bottom: -10px;
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    bottom: var(--rise-height);
+    transform: translateX(var(--rise-drift));
+    opacity: 1;
+  }
+}
+
+/* ----------------------------------------------------------
+   Explosão: um flash central + várias fagulhas se espalhando
+   ---------------------------------------------------------- */
+.firework-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.firework-flash {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  margin: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(244, 209, 96, 0.6) 45%, transparent 75%);
+  animation: firework-flash 0.5s ease-out forwards;
+}
+
+@keyframes firework-flash {
+  from {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+.firework-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--spark-size);
+  height: var(--spark-size);
+  margin: calc(var(--spark-size) / -2);
+  border-radius: 50%;
+  background: var(--spark-color);
+  box-shadow: 0 0 6px 1px var(--spark-color);
+  animation: firework-spark 0.9s cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes firework-spark {
+  from {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  to {
+    /* --spark-dy já embute uma leve "queda" (gravidade) somada ao raio da explosão */
+    transform: translate(var(--spark-dx), var(--spark-dy)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================
+   Acessibilidade: sem fogos para quem pediu menos animação
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .fireworks-field {
+    display: none;
+  }
+}

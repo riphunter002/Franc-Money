@@ -1,0 +1,489 @@
+/* ==========================================================
+   Franc Money — Login
+   Tokens
+   ========================================================== */
+:root {
+  --bg-base: #0a0e17;
+  --bg-panel: #0f1621;
+  --bg-panel-solid: #131c29;
+  --grid-line: #1c2938;
+  --gold: #d4af37;
+  --gold-light: #f4d160;
+  --gold-dim: #8a6f2a;
+  --text-primary: #edeef2;
+  --text-secondary: #8b93a1;
+  --danger: #ff6b6b;
+  --success: #3ddc97;
+
+  --font-display: "Sora", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+
+  --radius-lg: 20px;
+  --radius-md: 12px;
+
+  --focus-ring: 0 0 0 3px rgba(244, 209, 96, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* ==========================================================
+   Cena de fundo: grade financeira + moedas
+   ========================================================== */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% -10%, #16202f 0%, var(--bg-base) 55%);
+}
+
+.scene__grid {
+  position: absolute;
+  inset: -2px;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: 0.5;
+  mask-image: radial-gradient(ellipse at 50% 40%, black 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 0%, transparent 78%);
+}
+
+/* Linha de tendência sutil, sugerindo um gráfico ascendente */
+.scene__grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(105deg, transparent 46%, rgba(212, 175, 55, 0.08) 47%, transparent 48%),
+    linear-gradient(105deg, transparent 60%, rgba(212, 175, 55, 0.05) 61%, transparent 62%);
+}
+
+.scene__chart {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 52vh;
+  opacity: 0.7;
+  filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.25));
+}
+
+.scene__chart-line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.scene__chart-dot {
+  fill: var(--gold-light);
+  filter: drop-shadow(0 0 6px rgba(244, 209, 96, 0.9));
+}
+
+.scene__glow {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 60vw;
+  height: 60vw;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.14) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.coin-field {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;
+}
+
+.coin {
+  position: absolute;
+  top: -60px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: #3a2c05;
+  background: linear-gradient(155deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-dim) 100%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  will-change: transform, top;
+  animation-name: coin-fall, coin-spin;
+  animation-timing-function: linear, linear;
+  animation-iteration-count: infinite, infinite;
+}
+
+@keyframes coin-fall {
+  from {
+    top: -60px;
+  }
+  to {
+    top: 110vh;
+  }
+}
+
+@keyframes coin-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+/* ==========================================================
+   Layout principal
+   ========================================================== */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+}
+
+/* ==========================================================
+   Cartão de login (glassmorphism)
+   ========================================================== */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 36px 32px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(19, 28, 41, 0.82), rgba(15, 22, 33, 0.9));
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  animation: card-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-card__header {
+  margin-bottom: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.brand__mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  color: #241b04;
+  background: linear-gradient(160deg, var(--gold-light), var(--gold));
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35);
+}
+
+.brand__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+}
+
+.login-card__subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ==========================================================
+   Formulário
+   ========================================================== */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field__label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.field__toggle {
+  background: none;
+  border: none;
+  color: var(--gold-light);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.field__toggle:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.field__input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-family: var(--font-body);
+  color: #0e1420;
+  background: #f4f5f7;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field__input::placeholder {
+  color: #6b7280;
+}
+
+.field__input:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: var(--focus-ring);
+}
+
+.field__input.is-invalid {
+  border-color: var(--danger);
+}
+
+.field__error {
+  min-height: 18px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.login-form__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: -4px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.link {
+  color: var(--gold-light);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible,
+.checkbox input:focus-visible,
+.field__toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+}
+
+/* ==========================================================
+   Botão principal
+   ========================================================== */
+.btn-primary {
+  position: relative;
+  height: 56px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: #241b04;
+  background: linear-gradient(150deg, var(--gold-light), var(--gold));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(212, 175, 55, 0.28);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(212, 175, 55, 0.36);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 10px 28px rgba(212, 175, 55, 0.28);
+}
+
+.btn-primary:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.2) brightness(0.9);
+}
+
+.btn-primary__spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(36, 27, 4, 0.35);
+  border-top-color: #241b04;
+}
+
+.btn-primary.is-loading .btn-primary__spinner {
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+.btn-primary.is-loading .btn-primary__label {
+  opacity: 0.85;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-status {
+  min-height: 20px;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-status.is-error {
+  color: var(--danger);
+}
+
+.form-status.is-success {
+  color: var(--success);
+}
+
+.login-card__footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.login-card__footer p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================
+   Responsivo
+   ========================================================== */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 22px 26px;
+  }
+
+  .brand__name {
+    font-size: 20px;
+  }
+}
+
+/* ==========================================================
+   Acessibilidade: respeita preferência de movimento reduzido
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .coin-field {
+    display: none;
+  }
+
+  .login-card {
+    animation: none;
+  }
+
+  .btn-primary,
+  .field__input {
+    transition: none;
+  }
+}

@@ -1,0 +1,8 @@
+# Segredos e configuração local
+.env
+
+# Dependências
+node_modules/
+
+# Editor / sistema
+.DS_Store

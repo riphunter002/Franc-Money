@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Franc Money — Categorias</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Reaproveita o mesmo design system do dashboard (cores, sidebar, painéis) -->
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span class="sidebar__mark" aria-hidden="true">F</span>
+        <span class="sidebar__name">Franc Money</span>
+      </div>
+
+      <nav class="sidebar__nav" aria-label="Navegação principal">
+        <a class="nav-item" href="dashboard.html">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+          Painel
+        </a>
+        <a class="nav-item" href="transactions.html">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 12h16M4 12l5-5M4 12l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 6v12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          Transações
+        </a>
+        <a class="nav-item is-active" href="categories.html">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 6h16M4 12h10M4 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          Categorias
+        </a>
+      </nav>
+
+      <button class="sidebar__logout" id="logoutBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="18" height="18">
+          <path d="M15 17l5-5-5-5M20 12H9M12 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Sair
+      </button>
+    </aside>
+
+    <!-- ===================== CONTEÚDO ===================== -->
+    <div class="scene-dashboard" aria-hidden="true">
+      <div class="scene-dashboard__grid"></div>
+    </div>
+
+    <main class="main">
+
+      <header class="topbar">
+        <div>
+          <p class="topbar__eyebrow">Organize suas finanças</p>
+          <h1 class="topbar__title">Categorias</h1>
+        </div>
+      </header>
+
+      <!-- Formulário de nova categoria -->
+      <section class="panel panel--new-category">
+        <div class="panel__header">
+          <h2 class="panel__title">Nova categoria</h2>
+        </div>
+
+        <form id="categoryForm" class="category-form" novalidate>
+          <div class="modal-field category-form__field">
+            <label for="categoryName" class="modal-label">Nome da categoria</label>
+            <input
+              id="categoryName"
+              name="name"
+              type="text"
+              class="modal-input"
+              placeholder="Ex.: Alimentação, Transporte, Lazer..."
+              required
+            />
+          </div>
+          <button type="submit" class="btn-gold category-form__submit" id="categorySubmitBtn">
+            + Adicionar
+          </button>
+        </form>
+
+        <p class="modal-error" id="categoryFormError" role="alert"></p>
+      </section>
+
+      <!-- Lista de categorias -->
+      <section class="panel panel--category-list">
+        <div class="panel__header">
+          <h2 class="panel__title">Suas categorias</h2>
+        </div>
+
+        <ul class="manage-list" id="categoryManageList">
+          <!-- Preenchido dinamicamente por categories.js -->
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="session.js"></script>
+  <script src="categories.js"></script>
+</body>
+</html>

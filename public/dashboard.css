@@ -1099,3 +1099,54 @@ a {
   height: 40px;
   max-width: 160px;
 }
+
+/* ==========================================================
+   Página de Investimentos
+   ========================================================== */
+.modal-hint {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  min-height: 16px;
+}
+
+.investment-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.investment-form__field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.chart-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.chart-legend__swatch {
+  width: 18px;
+  height: 0;
+  border-top-width: 2.5px;
+  border-top-style: solid;
+}
+
+.chart-legend__swatch--solid {
+  border-top-color: var(--gold-light);
+}
+
+.chart-legend__swatch--dashed {
+  border-top-color: var(--text-secondary);
+  border-top-style: dashed;
+}

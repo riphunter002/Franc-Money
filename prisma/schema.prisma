@@ -18,6 +18,7 @@ model User {
 
   transactions  Transaction[]
   categories    Category[]
+  budgets       Budget[]
 
   @@map("users") // <-- Força a tabela a se chamar 'users'
 }
@@ -32,9 +33,26 @@ model Category {
 
   user        User          @relation(fields: [user_id], references: [id])
   transactions Transaction[]
+  budget      Budget?
 
   @@unique([name, user_id])
   @@map("categories") // <-- Força a tabela a se chamar 'categories'
+}
+
+// Limite de gasto mensal por categoria. É recorrente (não tem mês/ano): um
+// único valor por categoria, sempre comparado com os gastos do mês atual.
+model Budget {
+  id          String   @id @default(uuid())
+  amount      Decimal
+  user_id     String
+  category_id String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user     User     @relation(fields: [user_id], references: [id])
+  category Category @relation(fields: [category_id], references: [id])
+
+  @@map("budgets") // <-- Força a tabela a se chamar 'budgets'
 }
 
 model Transaction {

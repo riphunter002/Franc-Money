@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franc Money — Categorias</title>
+  <title>Franc Money — Orçamentos</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,7 +12,6 @@
     rel="stylesheet"
   />
 
-  <!-- Reaproveita o mesmo design system do dashboard (cores, sidebar, painéis) -->
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
@@ -43,13 +42,13 @@
           </svg>
           Transações
         </a>
-        <a class="nav-item is-active" href="categories.html">
+        <a class="nav-item" href="categories.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 6h16M4 12h10M4 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
           </svg>
           Categorias
         </a>
-        <a class="nav-item" href="budgets.html">
+        <a class="nav-item is-active" href="budgets.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 19V10M11 19V5M18 19v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -74,45 +73,56 @@
 
       <header class="topbar">
         <div>
-          <p class="topbar__eyebrow">Organize suas finanças</p>
-          <h1 class="topbar__title">Categorias</h1>
+          <p class="topbar__eyebrow">Fique no controle</p>
+          <h1 class="topbar__title">Orçamentos</h1>
         </div>
       </header>
 
-      <!-- Formulário de nova categoria -->
-      <section class="panel panel--new-category">
+      <!-- Formulário de novo orçamento -->
+      <section class="panel panel--new-budget">
         <div class="panel__header">
-          <h2 class="panel__title">Nova categoria</h2>
+          <h2 class="panel__title">Novo orçamento</h2>
         </div>
 
-        <form id="categoryForm" class="category-form" novalidate>
-          <div class="modal-field category-form__field">
-            <label for="categoryName" class="modal-label">Nome da categoria</label>
+        <form id="budgetForm" class="budget-form" novalidate>
+          <div class="modal-field budget-form__field">
+            <label for="budgetCategory" class="modal-label">Categoria</label>
+            <select id="budgetCategory" name="category_id" class="modal-input" required>
+              <option value="">Selecione uma categoria</option>
+            </select>
+          </div>
+
+          <div class="modal-field budget-form__field">
+            <label for="budgetAmount" class="modal-label">Limite mensal (R$)</label>
             <input
-              id="categoryName"
-              name="name"
-              type="text"
+              id="budgetAmount"
+              name="amount"
+              type="number"
               class="modal-input"
-              placeholder="Ex.: Alimentação, Transporte, Lazer..."
+              placeholder="0,00"
+              min="0.01"
+              step="0.01"
+              inputmode="decimal"
               required
             />
           </div>
-          <button type="submit" class="btn-gold category-form__submit" id="categorySubmitBtn">
-            + Adicionar
+
+          <button type="submit" class="btn-gold budget-form__submit" id="budgetSubmitBtn">
+            + Definir limite
           </button>
         </form>
 
-        <p class="modal-error" id="categoryFormError" role="alert"></p>
+        <p class="modal-error" id="budgetFormError" role="alert"></p>
       </section>
 
-      <!-- Lista de categorias -->
-      <section class="panel panel--category-list">
+      <!-- Lista de orçamentos -->
+      <section class="panel panel--budget-list">
         <div class="panel__header">
-          <h2 class="panel__title">Suas categorias</h2>
+          <h2 class="panel__title">Seus orçamentos</h2>
         </div>
 
-        <ul class="manage-list" id="categoryManageList">
-          <!-- Preenchido dinamicamente por categories.js -->
+        <ul class="budget-list" id="budgetList">
+          <!-- Preenchido dinamicamente por budgets.js -->
         </ul>
       </section>
 
@@ -120,6 +130,6 @@
   </div>
 
   <script src="session.js"></script>
-  <script src="categories.js"></script>
+  <script src="budgets.js"></script>
 </body>
 </html>

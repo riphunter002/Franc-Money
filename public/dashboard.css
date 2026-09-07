@@ -971,3 +971,131 @@ a {
   font-size: 14px;
   color: var(--text-secondary);
 }
+
+/* ==========================================================
+   Página de Orçamentos
+   ========================================================== */
+.budget-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.budget-form__field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.budget-form__submit {
+  height: 50px;
+  white-space: nowrap;
+}
+
+.budget-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.budget-row {
+  padding: 16px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.budget-row:last-child {
+  border-bottom: none;
+}
+
+.budget-row__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.budget-row__category {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.budget-row__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.budget-row__amounts {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.budget-row__amounts strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.budget-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.budget-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--success);
+  transition: width 0.3s ease;
+}
+
+.budget-progress__fill--warning {
+  background: var(--gold);
+}
+
+.budget-progress__fill--over {
+  background: var(--danger);
+}
+
+.budget-row__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.budget-row__status {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.budget-row__status--over {
+  color: var(--danger);
+}
+
+.budget-row__edit-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.budget-row__edit-form[hidden] {
+  display: none;
+}
+
+.budget-row__edit-form .modal-input {
+  height: 40px;
+  max-width: 160px;
+}

@@ -1183,3 +1183,75 @@ a {
   border-top-color: var(--text-secondary);
   border-top-style: dashed;
 }
+
+/* ==========================================================
+   Página de Importação
+   ========================================================== */
+.import-form {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.import-form .modal-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  height: auto;
+}
+
+.import-form .btn-gold {
+  height: 50px;
+  padding: 0 24px;
+  white-space: nowrap;
+}
+
+.panel--import-upload .modal-hint {
+  margin-top: 4px;
+}
+
+.panel--import-upload code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--gold-light);
+}
+
+/* Overflow horizontal: a tabela de revisão tem muitos campos editáveis
+   por linha e não cabe em telas estreitas */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.review-table {
+  min-width: 900px;
+}
+
+.review-table td {
+  padding: 8px 8px;
+}
+
+.review-table .modal-input {
+  height: 40px;
+  padding: 0 10px;
+  font-size: 13.5px;
+  min-width: 110px;
+}
+
+.review-table input[type="text"] {
+  min-width: 160px;
+}
+
+.review-table input[type="date"] {
+  min-width: 130px;
+}
+
+.review-table select {
+  min-width: 130px;
+}
+
+.review-table .row-actions {
+  justify-content: flex-end;
+}

@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
+const importedTransactionRoutes = require('./routes/importedTransactionRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 
@@ -34,6 +35,7 @@ app.use(userRoutes);
 app.use(transactionRoutes);
 app.use(categoryRoutes);
 app.use(budgetRoutes);
+app.use(importedTransactionRoutes);
 
 // Middleware global de erros
 app.use(errorHandler);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franc Money — Orçamentos</title>
+  <title>Franc Money — Importar fatura</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,7 +48,7 @@
           </svg>
           Categorias
         </a>
-        <a class="nav-item is-active" href="budgets.html">
+        <a class="nav-item" href="budgets.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 19V10M11 19V5M18 19v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -61,7 +61,7 @@
           </svg>
           Investimentos
         </a>
-        <a class="nav-item" href="import.html">
+        <a class="nav-item is-active" href="import.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 3v12M12 3l-4 4M12 3l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -87,63 +87,60 @@
 
       <header class="topbar">
         <div>
-          <p class="topbar__eyebrow">Fique no controle</p>
-          <h1 class="topbar__title">Orçamentos</h1>
+          <p class="topbar__eyebrow">Menos digitação, mais controle</p>
+          <h1 class="topbar__title">Importar fatura</h1>
         </div>
       </header>
 
-      <!-- Formulário de novo orçamento -->
-      <section class="panel panel--new-budget">
+      <!-- Upload do CSV -->
+      <section class="panel panel--import-upload">
         <div class="panel__header">
-          <h2 class="panel__title">Novo orçamento</h2>
+          <h2 class="panel__title">Importar CSV</h2>
         </div>
 
-        <form id="budgetForm" class="budget-form" novalidate>
-          <div class="modal-field budget-form__field">
-            <label for="budgetCategory" class="modal-label">Categoria</label>
-            <select id="budgetCategory" name="category_id" class="modal-input" required>
-              <option value="">Selecione uma categoria</option>
-            </select>
-          </div>
-
-          <div class="modal-field budget-form__field">
-            <label for="budgetAmount" class="modal-label">Limite mensal (R$)</label>
-            <input
-              id="budgetAmount"
-              name="amount"
-              type="number"
-              class="modal-input"
-              placeholder="0,00"
-              min="0.01"
-              step="0.01"
-              inputmode="decimal"
-              required
-            />
-          </div>
-
-          <button type="submit" class="btn-gold budget-form__submit" id="budgetSubmitBtn">
-            + Definir limite
-          </button>
+        <form id="importForm" class="import-form" novalidate>
+          <input type="file" id="importFile" accept=".csv,text/csv" class="modal-input" />
+          <button type="submit" class="btn-gold" id="importSubmitBtn">Importar</button>
         </form>
 
-        <p class="modal-error" id="budgetFormError" role="alert"></p>
+        <p class="modal-hint">
+          Formato esperado (com ou sem cabeçalho): <code>data;titulo;valor</code>,
+          uma transação por linha — ex.: <code>05/09/2026;Supermercado Extra;150,00</code>
+        </p>
+        <p class="modal-error" id="importFormError" role="alert"></p>
+        <p class="form-status" id="importFormStatus" role="status" aria-live="polite"></p>
       </section>
 
-      <!-- Lista de orçamentos -->
-      <section class="panel panel--budget-list">
+      <!-- Transações identificadas, aguardando revisão -->
+      <section class="panel panel--import-review">
         <div class="panel__header">
-          <h2 class="panel__title">Seus orçamentos</h2>
+          <h2 class="panel__title">Transações identificadas</h2>
+          <button type="button" class="btn-gold" id="confirmAllBtn" hidden>Confirmar todas</button>
         </div>
 
-        <ul class="budget-list" id="budgetList">
-          <!-- Preenchido dinamicamente por budgets.js -->
-        </ul>
+        <div class="table-scroll">
+          <table class="transactions-table review-table">
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Título</th>
+                <th scope="col">Valor (R$)</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Categoria</th>
+                <th scope="col" class="align-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="reviewBody">
+              <!-- Preenchido dinamicamente por import.js -->
+            </tbody>
+          </table>
+        </div>
       </section>
 
     </main>
   </div>
 
   <script src="session.js"></script>
-  <script src="budgets.js"></script>
+  <script src="import.js"></script>
 </body>
 </html>

@@ -19,6 +19,7 @@ model User {
   transactions  Transaction[]
   categories    Category[]
   budgets       Budget[]
+  importedTransactions ImportedTransaction[]
 
   @@map("users") // <-- Força a tabela a se chamar 'users'
 }
@@ -34,6 +35,7 @@ model Category {
   user        User          @relation(fields: [user_id], references: [id])
   transactions Transaction[]
   budget      Budget?
+  importedTransactions ImportedTransaction[]
 
   @@unique([name, user_id])
   @@map("categories") // <-- Força a tabela a se chamar 'categories'
@@ -53,6 +55,26 @@ model Budget {
   category Category @relation(fields: [category_id], references: [id])
 
   @@map("budgets") // <-- Força a tabela a se chamar 'budgets'
+}
+
+// Linha crua de um CSV de fatura importado, esperando revisão do usuário
+// (categoria, título, valor, data e tipo podem ser corrigidos antes de virar
+// uma Transaction de verdade). Fica isolada de tudo — resumo do dashboard,
+// gráficos e orçamentos não sabem que ela existe até ser confirmada.
+model ImportedTransaction {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Decimal
+  type        String   @default("EXPENSE")
+  date        DateTime
+  user_id     String
+  category_id String?
+  created_at  DateTime @default(now())
+
+  user     User      @relation(fields: [user_id], references: [id])
+  category Category? @relation(fields: [category_id], references: [id])
+
+  @@map("imported_transactions") // <-- Força a tabela a se chamar 'imported_transactions'
 }
 
 model Transaction {

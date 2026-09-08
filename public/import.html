@@ -104,8 +104,10 @@
         </form>
 
         <p class="modal-hint">
-          Formato esperado (com ou sem cabeçalho): <code>data;titulo;valor</code>,
-          uma transação por linha — ex.: <code>05/09/2026;Supermercado Extra;150,00</code>
+          Formatos aceitos: <code>data;titulo;valor</code> (ex.:
+          <code>05/09/2026;Supermercado Extra;150,00</code>) ou o CSV de fatura
+          do Nubank (<code>date,title,amount</code>) — detectado automaticamente
+          pelo cabeçalho.
         </p>
         <p class="modal-error" id="importFormError" role="alert"></p>
         <p class="form-status" id="importFormStatus" role="status" aria-live="polite"></p>

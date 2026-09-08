@@ -49,29 +49,96 @@ function parseBRDate(text) {
 }
 
 /* ----------------------------------------------------------
-   Lê o texto do CSV (separado por ";") e devolve as linhas
-   válidas + uma lista de erros (linhas ignoradas)
+   "2026-09-05" já vem no formato que a gente usa; só confere
+   se tem essa cara mesmo
+   ---------------------------------------------------------- */
+function parseIsoDate(text) {
+  const trimmed = text.trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+/* ----------------------------------------------------------
+   Separa uma linha de CSV pelo delimitador, respeitando campos
+   entre aspas (ex.: "25,99" não deve quebrar em dois campos
+   mesmo com o delimitador sendo vírgula) — é assim que o export
+   de fatura do Nubank escapa o valor, que também usa vírgula
+   decimal
+   ---------------------------------------------------------- */
+function splitCsvLine(line, delimiter) {
+  const fields = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (inQuotes) {
+      if (char === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        current += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === delimiter) {
+      fields.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  fields.push(current);
+  return fields;
+}
+
+/* ----------------------------------------------------------
+   Reconhece dois formatos pelo cabeçalho:
+   - "data;titulo;valor"  -> genérico (any banco/planilha em pt-BR)
+   - "date,title,amount"  -> export de fatura do Nubank
+   Sem um desses cabeçalhos, cai no formato genérico sem cabeçalho
+   (mantém o comportamento original).
+   ---------------------------------------------------------- */
+function detectCsvFormat(firstLine) {
+  const headerLower = firstLine.trim().toLowerCase();
+
+  if (headerLower === "date,title,amount") {
+    return { delimiter: ",", dateParser: parseIsoDate, hasHeader: true };
+  }
+
+  if (headerLower.split(";")[0]?.trim() === "data") {
+    return { delimiter: ";", dateParser: parseBRDate, hasHeader: true };
+  }
+
+  return { delimiter: ";", dateParser: parseBRDate, hasHeader: false };
+}
+
+/* ----------------------------------------------------------
+   Lê o texto do CSV e devolve as linhas válidas + uma lista de
+   erros (linhas ignoradas)
    ---------------------------------------------------------- */
 function parseCsv(text) {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return { rows: [], errors: [] };
+
+  const { delimiter, dateParser, hasHeader } = detectCsvFormat(lines[0]);
   const rows = [];
   const errors = [];
 
   lines.forEach((line, index) => {
-    const parts = line.split(";");
+    if (index === 0 && hasHeader) return;
 
-    // Pula a linha de cabeçalho, se existir (ex.: "data;titulo;valor")
-    if (index === 0 && parts[0]?.trim().toLowerCase() === "data") {
-      return;
-    }
-
+    const parts = splitCsvLine(line, delimiter);
     if (parts.length < 3) {
       errors.push(`linha ${index + 1} (esperava 3 colunas)`);
       return;
     }
 
     const [rawDate, rawTitle, rawAmount] = parts;
-    const date = parseBRDate(rawDate);
+    const date = dateParser(rawDate);
     const title = rawTitle.trim();
     const amount = parseBRLNumber(rawAmount);
 
@@ -113,7 +180,7 @@ function renderReviewTable(items) {
       return `
         <tr data-id="${item.id}">
           <td><input type="date" class="modal-input" value="${dateValue}" data-field="date" /></td>
-          <td><input type="text" class="modal-input" value="${escapeHtml(item.title)}" data-field="title" /></td>
+          <td><input type="text" class="modal-input" value="${escapeHtml(item.title)}" title="${escapeHtml(item.title)}" data-field="title" /></td>
           <td><input type="number" class="modal-input" min="0.01" step="0.01" value="${Number(item.amount)}" data-field="amount" /></td>
           <td>
             <select class="modal-input" data-field="type">

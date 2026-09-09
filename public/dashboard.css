@@ -1101,6 +1101,14 @@ a {
   color: var(--danger);
 }
 
+@media (max-width: 860px) {
+  /* Só no mobile: no desktop o alvo de mouse já é preciso o bastante,
+     mas 28px de altura é curto pra tocar com o dedo com confiança */
+  .row-actions__btn {
+    padding: 12px 14px;
+  }
+}
+
 .pagination {
   display: flex;
   align-items: center;

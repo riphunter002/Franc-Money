@@ -30,6 +30,15 @@
   box-sizing: border-box;
 }
 
+/* Garante que o atributo "hidden" sempre esconda o elemento, mesmo quando
+   alguma classe (ex.: display:flex de .modal-field) tenta reaparecer por
+   cima. Sem isso, esse bug específico já se repetiu 3 vezes nesta base de
+   código (.budget-row__edit-form, .manage-row__edit-form, e agora os campos
+   de recorrência do modal) — regra geral em vez de remendo caso a caso. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;

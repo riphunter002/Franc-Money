@@ -467,10 +467,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const amountInput = document.getElementById("txAmount");
   const categorySelect = document.getElementById("txCategory");
   const descriptionInput = document.getElementById("txDescription");
+  const recurrenceTypeSelect = document.getElementById("txRecurrenceType");
+  const installmentsField = document.getElementById("txInstallmentsField");
+  const installmentsInput = document.getElementById("txInstallmentsTotal");
 
   if (!openBtn || !overlay || !form) return;
 
   let lastFocusedElement = null;
+
+  // Data de hoje no fuso local (mesma lógica de transactions.js): esse
+  // modal não tem campo de data, sempre lança "agora", então uma
+  // recorrência criada aqui também começa hoje
+  function todayLocalDateString() {
+    const now = new Date();
+    const localMidnight = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return localMidnight.toISOString().slice(0, 10);
+  }
+
+  recurrenceTypeSelect.addEventListener("change", () => {
+    installmentsField.hidden = recurrenceTypeSelect.value !== "INSTALLMENT";
+  });
 
   function setFormError(message) {
     formError.textContent = message || "";
@@ -512,6 +528,8 @@ document.addEventListener("DOMContentLoaded", () => {
     lastFocusedElement = document.activeElement;
     form.reset();
     setFormError("");
+    recurrenceTypeSelect.value = "";
+    installmentsField.hidden = true;
 
     overlay.hidden = false;
     document.addEventListener("keydown", handleKeydown);
@@ -574,6 +592,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const recurrenceType = recurrenceTypeSelect.value;
+    const installmentsTotal = Number(installmentsInput.value);
+
+    if (recurrenceType === "INSTALLMENT" && (!installmentsTotal || installmentsTotal < 2)) {
+      setFormError("Informe pelo menos 2 parcelas.");
+      installmentsInput.focus();
+      return;
+    }
+
     const payload = {
       title,
       amount: amountValue,
@@ -585,10 +612,24 @@ document.addEventListener("DOMContentLoaded", () => {
     setSubmitting(true);
 
     try {
-      const response = await fetchWithAuth("/transactions", auth.token, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      let response;
+
+      if (recurrenceType) {
+        const recurringPayload = { ...payload, start_date: todayLocalDateString() };
+        if (recurrenceType === "INSTALLMENT") {
+          recurringPayload.installments_total = installmentsTotal;
+        }
+
+        response = await fetchWithAuth("/recurring-transactions", auth.token, {
+          method: "POST",
+          body: JSON.stringify(recurringPayload),
+        });
+      } else {
+        response = await fetchWithAuth("/transactions", auth.token, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      }
 
       const data = await response.json().catch(() => ({}));
 

@@ -103,3 +103,47 @@ function extractErrorMessage(data, fallback) {
   }
   return data?.error || fallback;
 }
+
+/* ----------------------------------------------------------
+   Menu mobile: abaixo de 860px a sidebar vira uma gaveta lateral
+   fora da tela, aberta/fechada pelo botão ☰ do topbar mobile.
+   Roda em toda tela autenticada, por isso fica aqui (compartilhado)
+   em vez de duplicado no *.js de cada página.
+   ---------------------------------------------------------- */
+function initMobileSidebar() {
+  const toggleBtn = document.getElementById("sidebarToggle");
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if (!toggleBtn || !sidebar || !backdrop) return;
+
+  function openSidebar() {
+    sidebar.classList.add("is-open");
+    backdrop.hidden = false;
+    toggleBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("is-open");
+    backdrop.hidden = true;
+    toggleBtn.setAttribute("aria-expanded", "false");
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    if (sidebar.classList.contains("is-open")) closeSidebar();
+    else openSidebar();
+  });
+
+  backdrop.addEventListener("click", closeSidebar);
+
+  // Fecha ao tocar num item do menu — a navegação já troca de página,
+  // isso só evita a gaveta ficar visível por um instante antes de sair
+  sidebar.querySelectorAll(".nav-item, .sidebar__logout").forEach((el) => {
+    el.addEventListener("click", closeSidebar);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeSidebar();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initMobileSidebar);

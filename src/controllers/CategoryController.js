@@ -13,6 +13,29 @@ const categorySchema = z.object({
 
 const updateCategorySchema = categorySchema.partial();
 
+// Paleta fixa pra dar uma cor própria a cada categoria automaticamente
+// (ainda não existe tela pra escolher a cor manualmente). A escolha é
+// baseada no nome, não na ordem de criação, pra ficar estável mesmo se
+// categorias forem excluídas e recriadas.
+const CATEGORY_COLOR_PALETTE = [
+  '#f4d160', // dourado
+  '#3ddc97', // verde
+  '#5b9bff', // azul
+  '#ff6b6b', // vermelho/coral
+  '#c792ea', // lilás
+  '#4fd6d2', // ciano
+  '#ff9f6b', // laranja
+  '#e0a8ff'  // rosa/violeta
+];
+
+function pickColorForName(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return CATEGORY_COLOR_PALETTE[hash % CATEGORY_COLOR_PALETTE.length];
+}
+
 module.exports = {
   async create(req, res, next) {
     try {
@@ -20,7 +43,7 @@ module.exports = {
       const user_id = req.userId;
 
       const category = await prisma.category.create({
-        data: { name, type, user_id }
+        data: { name, type, user_id, color: pickColorForName(name) }
       });
 
       return res.status(201).json(category);

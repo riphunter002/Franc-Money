@@ -145,33 +145,63 @@ function computeMonthlyBalances(transactions, monthsCount = 6) {
 }
 
 /* ----------------------------------------------------------
-   Agrupa o total gasto (apenas EXPENSE) por categoria
+   Primeiro dia do mês, "monthsCount" meses atrás — usado tanto
+   pelo gráfico de evolução quanto pelo filtro de categorias, pra
+   os dois entenderem "período" da mesma forma
    ---------------------------------------------------------- */
-function computeCategoryBreakdown(transactions) {
+function getWindowStart(monthsCount) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() - (monthsCount - 1), 1);
+}
+
+/* ----------------------------------------------------------
+   Agrupa o total gasto (apenas EXPENSE) por categoria, dentro do
+   período escolhido. monthsCount = 0 significa "sem filtro"
+   (todo o histórico).
+   ---------------------------------------------------------- */
+function computeCategoryBreakdown(transactions, monthsCount = 6) {
+  const windowStart = monthsCount > 0 ? getWindowStart(monthsCount) : null;
   const totals = new Map();
+  let totalSum = 0;
 
   transactions.forEach((tx) => {
     if (tx.type !== "EXPENSE") return;
+    if (windowStart && new Date(tx.date) < windowStart) return;
+
     const name = tx.category ? tx.category.name : "Sem categoria";
-    totals.set(name, (totals.get(name) || 0) + Number(tx.amount));
+    const color = tx.category ? tx.category.color : "#8b93a1";
+    const amount = Number(tx.amount);
+    const current = totals.get(name) || { amount: 0, color };
+    totals.set(name, { amount: current.amount + amount, color });
+    totalSum += amount;
   });
 
   return Array.from(totals.entries())
-    .map(([name, amount]) => ({ name, amount }))
+    .map(([name, { amount, color }]) => ({
+      name,
+      amount,
+      color,
+      percentage: totalSum > 0 ? (amount / totalSum) * 100 : 0,
+    }))
     .sort((a, b) => b.amount - a.amount);
 }
 
 /* ----------------------------------------------------------
    Desenha o gráfico de evolução do saldo (SVG)
    ---------------------------------------------------------- */
+const VIEW_WIDTH = 600;
+const VIEW_HEIGHT = 220;
+
+// Guarda os pontos do último desenho pro hover (tooltip) usar sem
+// precisar recalcular nada a cada movimento do mouse
+const trendChartState = { points: [], labels: [], values: [] };
+
 function renderTrendChart(labels, values) {
   const lineEl = document.getElementById("trendLine");
   const areaEl = document.getElementById("trendArea");
   const labelsEl = document.getElementById("trendLabels");
   if (!lineEl || !areaEl) return;
 
-  const VIEW_WIDTH = 600;
-  const VIEW_HEIGHT = 220;
   const PADDING_TOP = 16;
   const PADDING_BOTTOM = 16;
 
@@ -189,6 +219,10 @@ function renderTrendChart(labels, values) {
     return { x, y };
   });
 
+  trendChartState.points = points;
+  trendChartState.labels = labels;
+  trendChartState.values = values;
+
   const linePath = points
     .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(" ");
@@ -201,6 +235,63 @@ function renderTrendChart(labels, values) {
   if (labelsEl) {
     labelsEl.innerHTML = labels.map((label) => `<span>${escapeHtml(label)}</span>`).join("");
   }
+}
+
+/* ----------------------------------------------------------
+   Tooltip ao passar o mouse sobre o gráfico de evolução: acha o
+   ponto mais próximo do cursor e mostra mês + valor exato
+   ---------------------------------------------------------- */
+function initTrendChartHover() {
+  const svg = document.getElementById("trendChart");
+  const dot = document.getElementById("trendHoverDot");
+  const hoverLine = document.getElementById("trendHoverLine");
+  const tooltip = document.getElementById("trendTooltip");
+  const wrap = svg?.closest(".trend-chart__wrap");
+  if (!svg || !dot || !hoverLine || !tooltip || !wrap) return;
+
+  function handleMove(event) {
+    const { points, labels, values } = trendChartState;
+    if (!points.length) return;
+
+    const rect = svg.getBoundingClientRect();
+    const relX = ((event.clientX - rect.left) / rect.width) * VIEW_WIDTH;
+    const rawIndex = Math.round((relX / VIEW_WIDTH) * (points.length - 1));
+    const index = Math.max(0, Math.min(points.length - 1, rawIndex));
+    const point = points[index];
+
+    dot.setAttribute("cx", point.x);
+    dot.setAttribute("cy", point.y);
+    dot.hidden = false;
+
+    hoverLine.setAttribute("x1", point.x);
+    hoverLine.setAttribute("x2", point.x);
+    hoverLine.setAttribute("y1", 0);
+    hoverLine.setAttribute("y2", VIEW_HEIGHT);
+    hoverLine.hidden = false;
+
+    // Converte a posição do ponto (espaço do viewBox 600x220) pra posição
+    // real dentro do wrapper, onde o tooltip (um <div> normal) vai ficar
+    const wrapRect = wrap.getBoundingClientRect();
+    const pxX = (point.x / VIEW_WIDTH) * rect.width + (rect.left - wrapRect.left);
+    const pxY = (point.y / VIEW_HEIGHT) * rect.height + (rect.top - wrapRect.top);
+
+    tooltip.style.left = `${pxX}px`;
+    tooltip.style.top = `${pxY}px`;
+    tooltip.innerHTML = `
+      <div class="chart-tooltip__label">${escapeHtml(labels[index])}</div>
+      <div class="chart-tooltip__value">${currencyFormatter.format(values[index])}</div>
+    `;
+    tooltip.hidden = false;
+  }
+
+  function handleLeave() {
+    dot.hidden = true;
+    hoverLine.hidden = true;
+    tooltip.hidden = true;
+  }
+
+  svg.addEventListener("mousemove", handleMove);
+  svg.addEventListener("mouseleave", handleLeave);
 }
 
 /* ----------------------------------------------------------
@@ -221,17 +312,66 @@ function renderCategoryBreakdown(breakdown) {
   listEl.innerHTML = breakdown
     .map((c) => {
       const widthPct = max > 0 ? Math.round((c.amount / max) * 100) : 0;
+      const pct = Math.round(c.percentage);
       return `
         <li class="category-row">
           <div class="category-row__top">
-            <span>${escapeHtml(c.name)}</span>
-            <span>${currencyFormatter.format(c.amount)}</span>
+            <span class="category-row__name">
+              <span class="category-row__dot" style="background:${escapeHtml(c.color)}"></span>
+              ${escapeHtml(c.name)}
+            </span>
+            <span>${currencyFormatter.format(c.amount)} (${pct}%)</span>
           </div>
-          <div class="category-bar"><div class="category-bar__fill" style="width: ${widthPct}%"></div></div>
+          <div class="category-bar"><div class="category-bar__fill" style="width: ${widthPct}%; background:${escapeHtml(c.color)}"></div></div>
         </li>
       `;
     })
     .join("");
+}
+
+// Cache das transações carregadas, pra trocar de período (clique nas
+// abas 3M/6M/12M/Mês/Tudo) sem precisar buscar tudo de novo no servidor
+let cachedTransactions = [];
+
+function getActiveMonths(containerId, fallback) {
+  const active = document.querySelector(`#${containerId} .period-tab.is-active`);
+  return active ? Number(active.dataset.months) : fallback;
+}
+
+function setActiveTab(container, button) {
+  container.querySelectorAll(".period-tab").forEach((btn) => btn.classList.remove("is-active"));
+  button.classList.add("is-active");
+}
+
+/* ----------------------------------------------------------
+   Liga as abas de período (3M/6M/12M do gráfico, e Mês/3M/6M/Tudo
+   dos gastos por categoria) — clicar só recalcula em cima do que já
+   está em cachedTransactions, sem nova requisição
+   ---------------------------------------------------------- */
+function initPeriodTabs() {
+  const trendTabs = document.getElementById("trendPeriodTabs");
+  const categoryTabs = document.getElementById("categoryPeriodTabs");
+
+  if (trendTabs) {
+    trendTabs.addEventListener("click", (event) => {
+      const button = event.target.closest(".period-tab");
+      if (!button) return;
+
+      setActiveTab(trendTabs, button);
+      const trend = computeMonthlyBalances(cachedTransactions, Number(button.dataset.months));
+      renderTrendChart(trend.labels, trend.values);
+    });
+  }
+
+  if (categoryTabs) {
+    categoryTabs.addEventListener("click", (event) => {
+      const button = event.target.closest(".period-tab");
+      if (!button) return;
+
+      setActiveTab(categoryTabs, button);
+      renderCategoryBreakdown(computeCategoryBreakdown(cachedTransactions, Number(button.dataset.months)));
+    });
+  }
 }
 
 /* ----------------------------------------------------------
@@ -259,10 +399,14 @@ async function refreshAll(token) {
   }
 
   try {
-    const allTransactions = await fetchAllTransactions(token);
-    const trend = computeMonthlyBalances(allTransactions);
+    cachedTransactions = await fetchAllTransactions(token);
+
+    const trendMonths = getActiveMonths("trendPeriodTabs", 6);
+    const trend = computeMonthlyBalances(cachedTransactions, trendMonths);
     renderTrendChart(trend.labels, trend.values);
-    renderCategoryBreakdown(computeCategoryBreakdown(allTransactions));
+
+    const categoryMonths = getActiveMonths("categoryPeriodTabs", 6);
+    renderCategoryBreakdown(computeCategoryBreakdown(cachedTransactions, categoryMonths));
   } catch (err) {
     console.error("Erro ao calcular gráfico/categorias:", err);
   }
@@ -286,6 +430,8 @@ async function initDashboard() {
     greetingEl.textContent = `Olá, ${firstName}`;
   }
 
+  initPeriodTabs();
+  initTrendChartHover();
   await refreshAll(auth.token);
 }
 

@@ -123,28 +123,39 @@
         <div class="panel panel--chart">
           <div class="panel__header">
             <h2 class="panel__title">Evolução do saldo</h2>
-            <div class="period-tabs" role="tablist" aria-label="Período do gráfico">
-              <button class="period-tab" type="button">3M</button>
-              <button class="period-tab is-active" type="button">6M</button>
-              <button class="period-tab" type="button">12M</button>
+            <div class="period-tabs" role="tablist" aria-label="Período do gráfico" id="trendPeriodTabs">
+              <button class="period-tab" type="button" data-months="3">3M</button>
+              <button class="period-tab is-active" type="button" data-months="6">6M</button>
+              <button class="period-tab" type="button" data-months="12">12M</button>
             </div>
           </div>
-          <svg class="trend-chart" id="trendChart" viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#d4af37" stop-opacity="0.32" />
-                <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-            <path id="trendArea" fill="url(#trendFill)" />
-            <path id="trendLine" fill="none" stroke="#f4d160" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <div class="trend-chart__wrap">
+            <svg class="trend-chart" id="trendChart" viewBox="0 0 600 220" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#d4af37" stop-opacity="0.32" />
+                  <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path id="trendArea" fill="url(#trendFill)" />
+              <path id="trendLine" fill="none" stroke="#f4d160" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <line id="trendHoverLine" class="trend-chart__hover-line" hidden />
+              <circle id="trendHoverDot" class="trend-chart__hover-dot" r="5" hidden />
+            </svg>
+            <div class="chart-tooltip" id="trendTooltip" role="status" hidden></div>
+          </div>
           <div class="trend-chart__labels" id="trendLabels"></div>
         </div>
 
         <div class="panel panel--categories">
           <div class="panel__header">
             <h2 class="panel__title">Gastos por categoria</h2>
+            <div class="period-tabs" role="tablist" aria-label="Período dos gastos por categoria" id="categoryPeriodTabs">
+              <button class="period-tab" type="button" data-months="1">Mês</button>
+              <button class="period-tab" type="button" data-months="3">3M</button>
+              <button class="period-tab is-active" type="button" data-months="6">6M</button>
+              <button class="period-tab" type="button" data-months="0">Tudo</button>
+            </div>
           </div>
           <ul class="category-list" id="categoryBreakdownList">
             <!-- Preenchido dinamicamente por dashboard.js -->

@@ -225,6 +225,28 @@
             <input id="txDate" name="date" type="date" class="modal-input" required />
           </div>
 
+          <div class="modal-field" id="txRecurrenceField">
+            <label for="txRecurrenceType" class="modal-label">Recorrência (opcional)</label>
+            <select id="txRecurrenceType" name="recurrenceType" class="modal-input">
+              <option value="">Não repete</option>
+              <option value="RECURRING">Recorrente (todo mês, sem data pra parar)</option>
+              <option value="INSTALLMENT">Parcelada (número fixo de vezes)</option>
+            </select>
+          </div>
+
+          <div class="modal-field" id="txInstallmentsField" hidden>
+            <label for="txInstallmentsTotal" class="modal-label">Número de parcelas</label>
+            <input
+              id="txInstallmentsTotal"
+              name="installments_total"
+              type="number"
+              class="modal-input"
+              placeholder="Ex.: 6"
+              min="2"
+              step="1"
+            />
+          </div>
+
           <div class="modal-field">
             <label for="txCategory" class="modal-label">Categoria (opcional)</label>
             <select id="txCategory" name="category_id" class="modal-input">

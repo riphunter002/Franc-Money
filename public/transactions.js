@@ -39,12 +39,29 @@ function renderTransactionsTable(transactions) {
       const categoryName = tx.category ? tx.category.name : "Sem categoria";
       const dateLabel = dateFormatter.format(new Date(tx.date));
 
+      // Selo de recorrência: "Parcela 2/6" se veio de um parcelamento, ou
+      // "🔁 Recorrente" se veio de uma recorrência sem fim (salário, aluguel...)
+      let recurrenceBadge = "";
+      if (tx.installment_number && tx.recurringTransaction) {
+        recurrenceBadge = `<span class="tag tag--recurring">Parcela ${tx.installment_number}/${tx.recurringTransaction.installments_total}</span>`;
+      } else if (tx.recurring_transaction_id) {
+        recurrenceBadge = `<span class="tag tag--recurring">🔁 Recorrente</span>`;
+      }
+
+      // "Cancelar recorrência" só faz sentido pra recorrência sem fim — uma
+      // parcela já nasceu com todo o plano fechado, não tem o que cancelar
+      const cancelRecurrenceBtn =
+        tx.recurring_transaction_id && !tx.installment_number
+          ? `<button type="button" class="row-actions__btn" data-action="cancel-recurrence" data-recurring-id="${tx.recurring_transaction_id}">Cancelar recorrência</button>`
+          : "";
+
       return `
         <tr>
           <td>
             <div class="tx-desc">
               <span class="tx-dot ${isIncome ? "tx-dot--income" : "tx-dot--expense"}" aria-hidden="true"></span>
               ${escapeHtml(tx.title)}
+              ${recurrenceBadge}
             </div>
           </td>
           <td><span class="tag">${escapeHtml(categoryName)}</span></td>
@@ -54,6 +71,7 @@ function renderTransactionsTable(transactions) {
           </td>
           <td>
             <div class="row-actions">
+              ${cancelRecurrenceBtn}
               <button type="button" class="row-actions__btn" data-action="edit" data-id="${tx.id}">Editar</button>
               <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${tx.id}">Excluir</button>
             </div>
@@ -131,6 +149,15 @@ const amountInput = document.getElementById("txAmount");
 const dateInput = document.getElementById("txDate");
 const categorySelect = document.getElementById("txCategory");
 const descriptionInput = document.getElementById("txDescription");
+const recurrenceField = document.getElementById("txRecurrenceField");
+const recurrenceTypeSelect = document.getElementById("txRecurrenceType");
+const installmentsField = document.getElementById("txInstallmentsField");
+const installmentsInput = document.getElementById("txInstallmentsTotal");
+
+// Só mostra o campo "número de parcelas" quando "Parcelada" está selecionado
+recurrenceTypeSelect.addEventListener("change", () => {
+  installmentsField.hidden = recurrenceTypeSelect.value !== "INSTALLMENT";
+});
 
 // Data de hoje no fuso horário local, no formato que o <input type="date"> espera (YYYY-MM-DD).
 // Não dá pra usar new Date().toISOString() direto: ela é sempre em UTC, então perto da
@@ -205,6 +232,13 @@ async function openModal(transaction = null) {
     dateInput.value = todayLocalDateString();
   }
 
+  // Recorrência só se decide na criação: uma transação já existente não tem
+  // como "virar" recorrente ou parcelada depois de já ter sido lançada
+  recurrenceField.hidden = isEditing;
+  recurrenceTypeSelect.value = "";
+  installmentsField.hidden = true;
+  installmentsInput.value = "";
+
   overlay.hidden = false;
   document.addEventListener("keydown", handleKeydown);
 
@@ -271,6 +305,16 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  // Recorrência só existe na criação (o campo fica escondido ao editar)
+  const recurrenceType = isEditing ? "" : recurrenceTypeSelect.value;
+  const installmentsTotal = Number(installmentsInput.value);
+
+  if (recurrenceType === "INSTALLMENT" && (!installmentsTotal || installmentsTotal < 2)) {
+    setFormError("Informe pelo menos 2 parcelas.");
+    installmentsInput.focus();
+    return;
+  }
+
   const payload = { title, amount: amountValue, type, date };
   if (description) payload.description = description;
 
@@ -287,16 +331,33 @@ form.addEventListener("submit", async (event) => {
   setSubmitting(true, isEditing);
 
   try {
-    // O mesmo formulário decide entre criar (POST) e atualizar (PUT)
-    // dependendo se veio de "Nova transação" ou de "Editar"
-    const response = await fetchWithAuth(
-      isEditing ? `/transactions/${id}` : "/transactions",
-      auth.token,
-      {
-        method: isEditing ? "PUT" : "POST",
-        body: JSON.stringify(payload),
+    let response;
+
+    if (recurrenceType) {
+      // "Data" vira a data da primeira ocorrência; parcelada manda o total
+      // de parcelas, recorrente sem fim não manda nada nesse campo
+      const recurringPayload = { ...payload, start_date: date };
+      delete recurringPayload.date;
+      if (recurrenceType === "INSTALLMENT") {
+        recurringPayload.installments_total = installmentsTotal;
       }
-    );
+
+      response = await fetchWithAuth("/recurring-transactions", auth.token, {
+        method: "POST",
+        body: JSON.stringify(recurringPayload),
+      });
+    } else {
+      // O mesmo formulário decide entre criar (POST) e atualizar (PUT)
+      // dependendo se veio de "Nova transação" ou de "Editar"
+      response = await fetchWithAuth(
+        isEditing ? `/transactions/${id}` : "/transactions",
+        auth.token,
+        {
+          method: isEditing ? "PUT" : "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+    }
 
     const data = await response.json().catch(() => ({}));
 
@@ -343,13 +404,46 @@ async function handleDelete(id, token) {
   }
 }
 
+/* ----------------------------------------------------------
+   Cancela uma recorrência sem fim (não mexe no que já foi gerado)
+   ---------------------------------------------------------- */
+async function handleCancelRecurrence(recurringId, token) {
+  const confirmed = window.confirm(
+    "Cancelar essa recorrência? As transações já lançadas continuam normalmente; só os próximos meses deixam de ser criados."
+  );
+  if (!confirmed) return;
+
+  try {
+    const response = await fetchWithAuth(`/recurring-transactions/${recurringId}`, token, {
+      method: "DELETE",
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(extractErrorMessage(data, "Não foi possível cancelar a recorrência."));
+    }
+
+    await loadTransactions(token);
+  } catch (err) {
+    window.alert(err.message || "Não foi possível cancelar a recorrência.");
+  }
+}
+
 // Delegação de eventos: um único listener no <tbody> cobre todos os
-// botões "Editar"/"Excluir", mesmo depois que as linhas são recriadas
+// botões "Editar"/"Excluir"/"Cancelar recorrência", mesmo depois que as
+// linhas são recriadas
 document.getElementById("transactionsBody").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
 
-  const { action, id } = button.dataset;
+  const { action, id, recurringId } = button.dataset;
+
+  if (action === "cancel-recurrence") {
+    handleCancelRecurrence(recurringId, cachedToken);
+    return;
+  }
+
   const transaction = currentTransactions.find((tx) => tx.id === id);
   if (!transaction) return;
 

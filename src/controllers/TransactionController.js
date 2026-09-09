@@ -1,6 +1,7 @@
 // src/controllers/TransactionController.js
 const prisma = require('../config/prisma');
 const { z } = require('zod');
+const { generateDueRecurringTransactions } = require('../services/recurringTransactionService');
 
 const transactionSchema = z.object({
   title: z.string().trim().min(1, 'O título é obrigatório e não pode estar vazio.'),
@@ -38,6 +39,12 @@ module.exports = {
   async listByUser(req, res, next) {
     try {
       const userId = req.userId;
+
+      // Gera as transações de recorrências sem fim que já deveriam ter
+      // acontecido (ex.: salário do mês) antes de listar, pra elas já
+      // aparecerem sem o usuário precisar fazer nada
+      await generateDueRecurringTransactions(prisma, userId);
+
       // Captura page e limit da URL (padrão: página 1, 10 itens)
       const { type, startDate, endDate, page = 1, limit = 10 } = req.query;
 
@@ -62,7 +69,7 @@ module.exports = {
         prisma.transaction.findMany({
           where: filters,
           orderBy: { date: 'desc' },
-          include: { category: true },
+          include: { category: true, recurringTransaction: true },
           skip: skip,      // <-- Pula os itens das páginas anteriores
           take: limitNum   // <-- Pega apenas a quantidade do limite
         }),
@@ -87,6 +94,8 @@ module.exports = {
   async getSummary(req, res, next) {
     try {
       const userId = req.userId;
+
+      await generateDueRecurringTransactions(prisma, userId);
 
       const transactions = await prisma.transaction.findMany({
         where: { user_id: userId }

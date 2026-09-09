@@ -20,6 +20,7 @@ model User {
   categories    Category[]
   budgets       Budget[]
   importedTransactions ImportedTransaction[]
+  recurringTransactions RecurringTransaction[]
 
   @@map("users") // <-- Força a tabela a se chamar 'users'
 }
@@ -36,6 +37,7 @@ model Category {
   transactions Transaction[]
   budget      Budget?
   importedTransactions ImportedTransaction[]
+  recurringTransactions RecurringTransaction[]
 
   @@unique([name, user_id])
   @@map("categories") // <-- Força a tabela a se chamar 'categories'
@@ -77,6 +79,34 @@ model ImportedTransaction {
   @@map("imported_transactions") // <-- Força a tabela a se chamar 'imported_transactions'
 }
 
+// "Receita" que gera transações automaticamente: uma compra parcelada
+// (installments_total definido, gera todas as parcelas já na criação) ou
+// uma recorrência sem fim como salário/aluguel (installments_total nulo,
+// gera só a primeira na criação e as próximas conforme o app é aberto —
+// ver generateDueRecurringTransactions em recurringTransactionService.js).
+model RecurringTransaction {
+  id                      String    @id @default(uuid())
+  title                   String
+  description             String?
+  amount                  Decimal
+  type                    String
+  start_date              DateTime
+  installments_total      Int?
+  installments_generated  Int       @default(0)
+  // false = parou de gerar novas (parcelamento já completo, ou cancelada
+  // manualmente); transações já geradas continuam intactas
+  active                  Boolean   @default(true)
+  user_id                 String
+  category_id             String?
+  created_at              DateTime  @default(now())
+
+  user         User          @relation(fields: [user_id], references: [id])
+  category     Category?     @relation(fields: [category_id], references: [id])
+  transactions Transaction[]
+
+  @@map("recurring_transactions") // <-- Força a tabela a se chamar 'recurring_transactions'
+}
+
 model Transaction {
   id          String    @id @default(uuid())
   title       String
@@ -89,8 +119,13 @@ model Transaction {
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 
+  // Preenchidos só quando a transação veio de uma recorrência/parcelamento
+  recurring_transaction_id String?
+  installment_number       Int?
+
   user        User      @relation(fields: [user_id], references: [id])
   category    Category? @relation(fields: [category_id], references: [id])
+  recurringTransaction RecurringTransaction? @relation(fields: [recurring_transaction_id], references: [id])
 
   @@map("transactions") // <-- Força a tabela a se chamar 'transactions'
 }

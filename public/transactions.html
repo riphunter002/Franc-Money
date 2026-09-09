@@ -142,20 +142,22 @@
 
       <!-- Tabela -->
       <section class="panel panel--transactions">
-        <table class="transactions-table">
-          <thead>
-            <tr>
-              <th scope="col">Descrição</th>
-              <th scope="col">Categoria</th>
-              <th scope="col">Data</th>
-              <th scope="col" class="align-right">Valor</th>
-              <th scope="col" class="align-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="transactionsBody">
-            <!-- Preenchido dinamicamente por transactions.js -->
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th scope="col">Descrição</th>
+                <th scope="col">Categoria</th>
+                <th scope="col">Data</th>
+                <th scope="col" class="align-right">Valor</th>
+                <th scope="col" class="align-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody">
+              <!-- Preenchido dinamicamente por transactions.js -->
+            </tbody>
+          </table>
+        </div>
 
         <div class="pagination" id="pagination">
           <button type="button" class="pagination__btn" id="prevPageBtn">← Anterior</button>

@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { z } = require('zod');
+const env = require('../config/env');
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
@@ -51,15 +52,6 @@ module.exports = {
       });
 
       return res.status(201).json(toPublicUser(newUser));
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async list(req, res, next) {
-    try {
-      const users = await prisma.user.findMany();
-      return res.status(200).json(users.map(toPublicUser));
     } catch (error) {
       next(error);
     }
@@ -146,7 +138,7 @@ module.exports = {
         return res.status(401).json({ error: 'E-mail ou senha inválidos.' });
       }
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'segredo_super_secreto', {
+      const token = jwt.sign({ id: user.id }, env.JWT_SECRET, {
         expiresIn: '1d',
       });
 

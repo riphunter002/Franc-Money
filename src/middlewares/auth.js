@@ -1,5 +1,6 @@
 // src/middlewares/auth.js
 const jwt = require('jsonwebtoken');
+const env = require('../config/env');
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -18,7 +19,7 @@ module.exports = (req, res, next) => {
     return res.status(401).json({ error: 'Token mal formatado.' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'segredo_super_secreto', (err, decoded) => {
+  jwt.verify(token, env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ error: 'Token inválido ou expirado.' });
     }

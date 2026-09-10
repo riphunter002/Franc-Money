@@ -130,22 +130,8 @@ routes.post('/forgot-password', loginLimiter, UserController.forgotPassword);
  */
 routes.post('/reset-password', UserController.resetPassword);
 
-// GET/PUT/DELETE abaixo mexem com dados de conta — exigem login
+// PUT/DELETE abaixo mexem com dados de conta — exigem login
 routes.use(authMiddleware);
-
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Lista os usuários cadastrados
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista retornada com sucesso
- */
-routes.get('/users', UserController.list);
 
 /**
  * @swagger

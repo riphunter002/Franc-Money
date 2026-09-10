@@ -170,6 +170,34 @@ npx prisma studio            # interface visual para inspecionar o banco
 Depois de `npm run dev`, o app fica em `http://localhost:3333/` e a documentação
 da API em `http://localhost:3333/api-docs`.
 
+## Produção
+
+O app está publicado em **https://franc-money.onrender.com**.
+
+- **Servidor**: hospedado no [Render](https://render.com) (plano gratuito),
+  serviço `franc-money`, conectado ao repositório do GitHub na branch `main`.
+- **Banco de dados**: PostgreSQL no [Neon](https://neon.tech) (plano
+  gratuito) — **totalmente separado** do banco local de desenvolvimento.
+  Dados criados localmente (`npm run dev`) não aparecem em produção, e
+  vice-versa.
+- **Deploy**: automático — todo `git push` na branch `main` dispara um novo
+  deploy no Render (build + restart sozinho, não precisa fazer nada manual).
+  - Build command: `npm install && npm run build` (`build` roda
+    `prisma generate` e `prisma migrate deploy` — qualquer migration nova
+    já é aplicada no banco de produção automaticamente a cada deploy)
+  - Start command: `npm start` (`node src/server.js`, diferente do `npm run
+    dev` local, que usa nodemon)
+- **Variáveis de ambiente**: configuradas direto no painel do Render (aba
+  "Environment" do serviço), **não** vêm do `.env` local. Precisa ter:
+  `DATABASE_URL` (string de conexão do Neon), `JWT_SECRET` (gerado à parte,
+  diferente do usado localmente), `BRAPI_API_TOKEN`, `ALLOWED_ORIGIN`
+  (definido como `https://franc-money.onrender.com`, restringe o CORS só ao
+  próprio site).
+- **"Sono" por inatividade**: tanto o Render quanto o Neon, no plano
+  gratuito, hibernam depois de um tempo sem uso. A primeira visita depois
+  disso demora uns 30-60 segundos pra acordar — normal do plano gratuito,
+  não é bug.
+
 ## Notas de segurança
 
 - `.env` contém `DATABASE_URL` e `JWT_SECRET` — **nunca commitar**. Conferir se

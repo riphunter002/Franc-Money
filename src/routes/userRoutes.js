@@ -75,6 +75,61 @@ routes.post('/users', UserController.create);
  */
 routes.post('/login', loginLimiter, UserController.login);
 
+/**
+ * @swagger
+ * /forgot-password:
+ *   post:
+ *     summary: Pede a redefinição de senha (versão local — devolve o link direto, sem enviar e-mail)
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Link de redefinição gerado com sucesso
+ *       404:
+ *         description: Nenhuma conta com esse e-mail
+ *       429:
+ *         description: Limite de tentativas excedido (Rate Limit)
+ */
+routes.post('/forgot-password', loginLimiter, UserController.forgotPassword);
+
+/**
+ * @swagger
+ * /reset-password:
+ *   post:
+ *     summary: Define uma nova senha a partir do token de redefinição
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Senha redefinida com sucesso
+ *       400:
+ *         description: Token inválido, expirado, ou senha inválida
+ */
+routes.post('/reset-password', UserController.resetPassword);
+
 // GET/PUT/DELETE abaixo mexem com dados de conta — exigem login
 routes.use(authMiddleware);
 

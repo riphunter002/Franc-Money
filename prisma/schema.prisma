@@ -16,6 +16,11 @@ model User {
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
 
+  // Redefinição de senha: token aleatório + validade. Nulos quando não há
+  // pedido de redefinição em aberto (ou depois que a senha já foi trocada).
+  reset_token         String?
+  reset_token_expires DateTime?
+
   transactions  Transaction[]
   categories    Category[]
   budgets       Budget[]

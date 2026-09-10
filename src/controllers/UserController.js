@@ -29,6 +29,11 @@ const updateUserSchema = z.object({
   email: z.string().trim().toLowerCase().email('Informe um e-mail válido.').optional()
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Informe a senha atual.'),
+  newPassword: z.string().min(6, 'A nova senha deve ter ao menos 6 caracteres.')
+});
+
 // Nunca devolve o password_hash pro cliente — não tem por que sair da API
 function toPublicUser(user) {
   const { password_hash, ...publicUser } = user;
@@ -96,6 +101,32 @@ module.exports = {
 
       await prisma.user.delete({ where: { id } });
       return res.status(200).json({ message: 'Usuário deletado com sucesso!' });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Trocar a senha exige confirmar a senha ATUAL — diferente da redefinição
+  // por link (que existe justamente pra quando você não lembra a senha
+  // atual), aqui a pessoa já está logada, então provar que sabe a senha de
+  // hoje é o que impede alguém que só pegou a sessão aberta de trocar a
+  // senha sem o dono perceber
+  async changePassword(req, res, next) {
+    try {
+      const userId = req.userId;
+      const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
+
+      if (!passwordMatch) {
+        return res.status(400).json({ error: 'A senha atual informada está incorreta.' });
+      }
+
+      const password_hash = await bcrypt.hash(newPassword, 10);
+      await prisma.user.update({ where: { id: userId }, data: { password_hash } });
+
+      return res.status(200).json({ message: 'Senha alterada com sucesso.' });
     } catch (error) {
       next(error);
     }

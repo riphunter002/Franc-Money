@@ -149,6 +149,38 @@ routes.get('/users', UserController.list);
 
 /**
  * @swagger
+ * /users/password:
+ *   put:
+ *     summary: Troca a senha do usuário logado (exige a senha atual)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Senha alterada com sucesso
+ *       400:
+ *         description: Senha atual incorreta ou dados inválidos
+ */
+// Precisa vir ANTES de /users/:id — senão o Express casaria "password" como
+// se fosse o :id (a rota mais específica precisa ser registrada primeiro)
+routes.put('/users/password', UserController.changePassword);
+
+/**
+ * @swagger
  * /users/{id}:
  *   put:
  *     summary: Atualiza os dados de um usuário pelo ID

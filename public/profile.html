@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franc Money — Importar fatura</title>
+  <title>Franc Money — Perfil</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -77,14 +77,14 @@
           </svg>
           Investimentos
         </a>
-        <a class="nav-item is-active" href="import.html">
+        <a class="nav-item" href="import.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 3v12M12 3l-4 4M12 3l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Importar
         </a>
-        <a class="nav-item" href="profile.html">
+        <a class="nav-item is-active" href="profile.html">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/>
             <path d="M5 20c1.2-3.8 4.2-5.5 7-5.5s5.8 1.7 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -110,62 +110,72 @@
 
       <header class="topbar">
         <div>
-          <p class="topbar__eyebrow">Menos digitação, mais controle</p>
-          <h1 class="topbar__title">Importar fatura</h1>
+          <p class="topbar__eyebrow">Sua conta</p>
+          <h1 class="topbar__title">Perfil</h1>
         </div>
       </header>
 
-      <!-- Upload do CSV -->
-      <section class="panel panel--import-upload">
+      <!-- Dados da conta -->
+      <section class="panel panel--profile">
         <div class="panel__header">
-          <h2 class="panel__title">Importar CSV</h2>
+          <h2 class="panel__title">Seus dados</h2>
         </div>
 
-        <form id="importForm" class="import-form" novalidate>
-          <input type="file" id="importFile" accept=".csv,text/csv" class="modal-input" />
-          <button type="submit" class="btn-gold" id="importSubmitBtn">Importar</button>
+        <form id="profileForm" class="category-form" novalidate>
+          <div class="modal-field category-form__field">
+            <label for="profileName" class="modal-label">Nome</label>
+            <input id="profileName" type="text" class="modal-input" required />
+          </div>
+
+          <div class="modal-field category-form__field">
+            <label for="profileEmail" class="modal-label">E-mail</label>
+            <input id="profileEmail" type="email" class="modal-input" required />
+          </div>
+
+          <button type="submit" class="btn-gold category-form__submit" id="profileSubmitBtn">
+            Salvar alterações
+          </button>
         </form>
 
-        <p class="modal-hint">
-          Formatos aceitos: <code>data;titulo;valor</code> (ex.:
-          <code>05/09/2026;Supermercado Extra;150,00</code>) ou o CSV de fatura
-          do Nubank (<code>date,title,amount</code>) — detectado automaticamente
-          pelo cabeçalho.
-        </p>
-        <p class="modal-error" id="importFormError" role="alert"></p>
-        <p class="form-status" id="importFormStatus" role="status" aria-live="polite"></p>
+        <p class="modal-error" id="profileFormError" role="alert"></p>
+        <p class="form-status" id="profileFormStatus" role="status" aria-live="polite"></p>
       </section>
 
-      <!-- Transações identificadas, aguardando revisão -->
-      <section class="panel panel--import-review">
+      <!-- Trocar senha -->
+      <section class="panel panel--password">
         <div class="panel__header">
-          <h2 class="panel__title">Transações identificadas</h2>
-          <button type="button" class="btn-gold" id="confirmAllBtn" hidden>Confirmar todas</button>
+          <h2 class="panel__title">Alterar senha</h2>
         </div>
 
-        <div class="table-scroll">
-          <table class="transactions-table review-table">
-            <thead>
-              <tr>
-                <th scope="col">Data</th>
-                <th scope="col">Título</th>
-                <th scope="col">Valor (R$)</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Categoria</th>
-                <th scope="col" class="align-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="reviewBody">
-              <!-- Preenchido dinamicamente por import.js -->
-            </tbody>
-          </table>
-        </div>
+        <form id="passwordForm" class="category-form" novalidate>
+          <div class="modal-field category-form__field">
+            <label for="currentPassword" class="modal-label">Senha atual</label>
+            <input id="currentPassword" type="password" class="modal-input" autocomplete="current-password" required />
+          </div>
+
+          <div class="modal-field category-form__field">
+            <label for="newPassword" class="modal-label">Nova senha</label>
+            <input id="newPassword" type="password" class="modal-input" autocomplete="new-password" minlength="6" required />
+          </div>
+
+          <div class="modal-field category-form__field">
+            <label for="confirmNewPassword" class="modal-label">Confirmar nova senha</label>
+            <input id="confirmNewPassword" type="password" class="modal-input" autocomplete="new-password" minlength="6" required />
+          </div>
+
+          <button type="submit" class="btn-gold category-form__submit" id="passwordSubmitBtn">
+            Alterar senha
+          </button>
+        </form>
+
+        <p class="modal-error" id="passwordFormError" role="alert"></p>
+        <p class="form-status" id="passwordFormStatus" role="status" aria-live="polite"></p>
       </section>
 
     </main>
   </div>
 
   <script src="session.js"></script>
-  <script src="import.js"></script>
+  <script src="profile.js"></script>
 </body>
 </html>

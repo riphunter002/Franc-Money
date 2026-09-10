@@ -44,6 +44,18 @@ function goToLogin() {
   window.location.href = "index.html";
 }
 
+// Atualiza o usuário salvo (ex.: depois de editar nome/e-mail na tela de
+// perfil) sem mexer no token. Escreve só no storage que já está em uso —
+// localStorage ou sessionStorage, dependendo do "Manter conectado" do login
+function updateStoredUser(user) {
+  if (window.localStorage.getItem("franc_user")) {
+    window.localStorage.setItem("franc_user", JSON.stringify(user));
+  }
+  if (window.sessionStorage.getItem("franc_user")) {
+    window.sessionStorage.setItem("franc_user", JSON.stringify(user));
+  }
+}
+
 // Wrapper de fetch que já injeta o token e trata sessão expirada (401)
 async function fetchWithAuth(path, token, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {

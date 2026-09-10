@@ -2,6 +2,7 @@
 const prisma = require('../config/prisma');
 const { z } = require('zod');
 const { generateDueRecurringTransactions } = require('../services/recurringTransactionService');
+const { currentMonthRangeUTC } = require('../services/dateRangeService');
 
 const transactionSchema = z.object({
   title: z.string().trim().min(1, 'O título é obrigatório e não pode estar vazio.'),
@@ -101,14 +102,21 @@ module.exports = {
         where: { user_id: userId }
       });
 
+      // "Saldo atual" continua somando tudo desde sempre (é um saldo de
+      // verdade, faz sentido ser vitalício). Já "receitas"/"despesas" agora
+      // são só do mês atual -- antes somavam o histórico inteiro, apesar do
+      // rótulo na tela dizer "no período".
+      const { start, end } = currentMonthRangeUTC();
+
       const summary = transactions.reduce((acc, transaction) => {
         const amount = Number(transaction.amount);
+        const isCurrentMonth = transaction.date >= start && transaction.date < end;
 
         if (transaction.type === 'INCOME') {
-          acc.income += amount;
+          if (isCurrentMonth) acc.income += amount;
           acc.total += amount;
         } else if (transaction.type === 'EXPENSE') {
-          acc.expense += amount;
+          if (isCurrentMonth) acc.expense += amount;
           acc.total -= amount;
         }
 

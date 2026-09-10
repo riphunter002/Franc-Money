@@ -1,6 +1,7 @@
 // src/controllers/BudgetController.js
 const prisma = require('../config/prisma');
 const { z } = require('zod');
+const { currentMonthRangeUTC } = require('../services/dateRangeService');
 
 const budgetSchema = z.object({
   category_id: z.string().uuid('ID de categoria inválido.'),
@@ -10,16 +11,6 @@ const budgetSchema = z.object({
 const updateBudgetSchema = z.object({
   amount: z.coerce.number().positive('O limite deve ser um número maior que zero.')
 });
-
-// Primeiro e último instante (UTC) do mês atual, usados pra somar só os
-// gastos "deste mês" — mesmo critério UTC já usado no resto do app pra
-// evitar o bug de fuso horário que corrigimos nas transações.
-function currentMonthRangeUTC() {
-  const now = new Date();
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return { start, end };
-}
 
 module.exports = {
   async create(req, res, next) {

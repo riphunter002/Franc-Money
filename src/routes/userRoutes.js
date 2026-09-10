@@ -75,8 +75,8 @@ routes.post('/users', UserController.create);
  */
 routes.post('/login', loginLimiter, UserController.login);
 
-// Se as rotas abaixo forem protegidas por token, lembre-se de incluir o authMiddleware:
-// routes.use(authMiddleware);
+// GET/PUT/DELETE abaixo mexem com dados de conta — exigem login
+routes.use(authMiddleware);
 
 /**
  * @swagger

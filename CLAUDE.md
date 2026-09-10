@@ -44,14 +44,21 @@ Franc Money/
 │   ├── index.html             (login)
 │   ├── style.css              (estilos do login)
 │   ├── auth.js                (lógica do login)
-│   ├── session.js             (COMPARTILHADO: sessão, fetchWithAuth, formatação)
-│   ├── dashboard.html
+│   ├── register.html / .css / .js   (cadastro)
+│   ├── forgot-password.html / .js   (pedir redefinição de senha)
+│   ├── reset-password.html / .js    (definir nova senha via token)
+│   ├── session.js             (COMPARTILHADO: sessão, fetchWithAuth, formatação,
+│   │                            menu hambúrguer mobile)
+│   ├── dashboard.html / .js
 │   ├── dashboard.css          (design system de TODAS as telas internas)
-│   ├── dashboard.js
-│   ├── transactions.html
-│   ├── transactions.js
-│   ├── categories.html
-│   └── categories.js
+│   ├── transactions.html / .js
+│   ├── categories.html / .js
+│   ├── budgets.html / .js     (orçamentos por categoria)
+│   ├── investments.html / .js (carteira + simulador de juros compostos)
+│   ├── import.html / .js      (importação de fatura via CSV)
+│   ├── profile.html / .js     (editar nome/e-mail/senha)
+│   ├── logo-escudo.png        (logo usada no menu lateral)
+│   └── favicon.png
 ├── src/
 │   ├── config/
 │   │   ├── env.js             (valida variáveis de ambiente com Zod)
@@ -60,7 +67,15 @@ Franc Money/
 │   ├── controllers/
 │   │   ├── UserController.js
 │   │   ├── TransactionController.js
-│   │   └── CategoryController.js
+│   │   ├── CategoryController.js
+│   │   ├── BudgetController.js
+│   │   ├── ImportedTransactionController.js
+│   │   ├── RecurringTransactionController.js
+│   │   └── InvestmentController.js
+│   ├── services/
+│   │   ├── dateRangeService.js        (intervalo do mês atual em UTC, compartilhado)
+│   │   ├── recurringTransactionService.js  (gera ocorrências de recorrências/parcelamentos)
+│   │   └── brapiService.js            (busca cotação na API da brapi.dev)
 │   ├── middlewares/
 │   │   ├── auth.js            (valida o JWT)
 │   │   ├── errorHandler.js
@@ -68,7 +83,11 @@ Franc Money/
 │   ├── routes/
 │   │   ├── userRoutes.js
 │   │   ├── transactionRoutes.js
-│   │   └── categoryRoutes.js
+│   │   ├── categoryRoutes.js
+│   │   ├── budgetRoutes.js
+│   │   ├── importedTransactionRoutes.js
+│   │   ├── recurringTransactionRoutes.js
+│   │   └── investmentRoutes.js
 │   └── server.js
 ├── .env                       (NÃO commitar)
 └── package.json
@@ -95,69 +114,76 @@ Franc Money/
 
 ## API
 
-Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users` e
-`POST /login`.
+Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users`,
+`POST /login`, `POST /forgot-password` e `POST /reset-password`.
 
 | Método | Rota | Observação |
 |---|---|---|
 | POST | `/users` | Cadastro. Body: `{ name, email, password }` |
-| POST | `/login` | Tem rate limit (5 tentativas / 15 min → 429) |
+| POST | `/login` | Rate limit (5 tentativas / 15 min → 429) |
+| POST | `/forgot-password` | Gera link de redefinição (versão local: devolve o link direto na resposta, sem enviar e-mail de verdade) |
+| POST | `/reset-password` | Define nova senha a partir do token de `/forgot-password` |
+| GET | `/users` | Lista usuários (autenticado) |
+| PUT | `/users/password` | Troca a senha do usuário logado, exige a senha atual |
+| PUT | `/users/:id` | Atualiza nome/e-mail/senha — só o dono da conta pode |
+| DELETE | `/users/:id` | Remove a conta — só o dono pode |
 | GET | `/transactions` | Filtros: `type`, `startDate`, `endDate`, `page`, `limit`. Retorna `{ data, meta }` |
-| POST | `/transactions` | `{ title, description?, amount, type, category_id? }` |
+| POST | `/transactions` | `{ title, description?, amount, type, category_id?, date? }` |
 | PUT | `/transactions/:id` | Atualização parcial |
 | DELETE | `/transactions/:id` | |
-| GET | `/summary` | Retorna `{ income, expense, total }` |
+| GET | `/summary` | `{ income, expense, total }` — income/expense são do mês atual, total é geral |
 | GET | `/categories` | |
-| POST | `/categories` | `{ name }` |
+| POST | `/categories` | `{ name, type, color? }` — `type` é `INCOME` ou `EXPENSE`; sem `color`, escolhe uma cor automática |
+| PUT | `/categories/:id` | Atualiza `name` e/ou `type` |
 | DELETE | `/categories/:id` | |
+| GET | `/budgets` | Lista orçamentos com o gasto já realizado no mês atual |
+| POST | `/budgets` | `{ category_id, amount }` — um orçamento recorrente por categoria |
+| PUT | `/budgets/:id` | `{ amount }` |
+| DELETE | `/budgets/:id` | |
+| GET | `/imported-transactions` | Lista linhas de CSV pendentes de revisão |
+| POST | `/imported-transactions` | Importa em lote linhas de CSV já interpretadas no navegador |
+| POST | `/imported-transactions/:id/confirm` | Confirma um item (com edições opcionais) e cria a transação de verdade |
+| DELETE | `/imported-transactions/:id` | Descarta um item pendente sem criar transação |
+| GET | `/recurring-transactions` | Lista as recorrências/parcelamentos do usuário |
+| POST | `/recurring-transactions` | `{ title, amount, type, category_id?, start_date, installments_total? }` — sem `installments_total`, é recorrência sem fim; com, é parcelamento |
+| DELETE | `/recurring-transactions/:id` | Cancela recorrência sem fim (não apaga transações já geradas) |
+| GET | `/investments` | Lista a carteira; atualiza a cotação se estiver desatualizada (+15 min) |
+| POST | `/investments` | `{ ticker, quantity, average_price }` — busca a cotação atual na hora de criar |
+| PUT | `/investments/:id` | Atualiza quantidade e/ou preço médio |
+| DELETE | `/investments/:id` | |
 
 ## Estado atual
 
 **Funcionando:**
-- Login com JWT, sessão persistida em `localStorage`/`sessionStorage`
-  (conforme o checkbox "Manter conectado")
+- Cadastro (com fogos de artifício na tela de boas-vindas 🎆) e login automático
+  em seguida, sessão persistida em `localStorage`/`sessionStorage` (conforme o
+  checkbox "Manter conectado")
+- Recuperação de senha (versão local: sem envio de e-mail de verdade, o link
+  de redefinição aparece direto na tela) e troca de senha logado, na tela de
+  perfil
+- Perfil: editar nome, e-mail e senha
 - Dashboard: cartões de resumo, gráfico de evolução do saldo e gastos por
-  categoria — todos com dados reais (agregados no front a partir de
-  `/transactions`, já que a API não tem endpoint de agregação por período)
-- Transações: listagem paginada, filtros, criar, editar e excluir
-- Categorias: criar, listar e excluir
+  categoria — dados reais agregados no front a partir de `/transactions` —,
+  mais o atalho "+ Nova transação" (com opção de parcelamento)
+- Transações: listagem paginada, filtros, data editável, criar, editar,
+  excluir e marcar como recorrente/parcelada
+- Recorrências e parcelamentos: gerados sob demanda ("lazy") sempre que o
+  usuário abre o app — não depende de nenhum processo rodando em segundo plano
+- Importação de fatura via CSV (compatível com o formato real do Nubank e um
+  formato BR genérico), com tela de revisão antes de confirmar cada linha
+- Categorias: criar, listar, editar, excluir — com tipo (receita/despesa) e
+  cor (escolhida automaticamente ou definida manualmente)
+- Orçamentos: limite mensal recorrente por categoria, com barra de progresso
+- Investimentos: carteira com cotações reais da B3 (via brapi.dev, atualizadas
+  a cada 15 min) e simulador de juros compostos
+- Layout responsivo (menu hambúrguer em telas pequenas)
+- Logo e favicon próprios em todas as telas
 - Swagger documentado em `/api-docs`
+- Publicado em produção — ver seção "Produção" abaixo
 
-**Ainda não existe:**
-- Tela de cadastro de usuário (só dá para criar conta via Swagger/curl)
-- Recuperação de senha (o link existe no login, mas não leva a nada)
-- Tela de perfil (editar nome, e-mail, senha)
-- Escolher a data da transação (o schema usa `@default(now())`, então tudo
-  entra com a data de hoje — **esta é a limitação mais incômoda hoje**)
-- Categorias não têm tipo (receita/despesa) nem cor
-- Orçamentos, transações recorrentes, exportação de relatórios
-- Investimentos
-
-## Plano de evolução
-
-A ordem foi escolhida para **minimizar retrabalho**: mudanças de schema são as
-mais caras (exigem migration + ajuste em controllers + ajuste nas telas), então
-são agrupadas primeiro; telas novas e isoladas ficam para depois.
-
-**Etapa 1 — Mudanças de schema (uma migration só)**
-- Campo `date` editável nas transações (hoje é sempre "agora")
-- `type` e `color` em `Category`
-- Possivelmente já criar a tabela `Budget` (orçamentos), para não precisar de
-  outra migration depois
-- Atenção: adicionar campo obrigatório em tabela com dados existentes exige
-  definir um valor padrão na migration
-
-**Etapa 2 — Tela de cadastro de usuário**
-Não toca no banco nem nos controllers (a rota `POST /users` já existe).
-Reaproveita `style.css` do login.
-
-**Etapa 3 — Orçamentos por categoria**
-Limite mensal por categoria, com barra de progresso e alerta ao estourar.
-
-**Etapa 4 — Investimentos**
-Deixado por último: é o maior, é isolado (não quebra o que existe) e o escopo
-tende a mudar conforme o app for usado. Começar pela **projeção** (juros
-compostos — matemática pura, sem API externa) antes de pensar em cotações reais.
+O plano original de evolução (schema → cadastro → orçamentos → investimentos)
+foi concluído; itens novos a partir daqui entram direto nesta lista conforme
+forem implementados.
 
 ## Comandos
 

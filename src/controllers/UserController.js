@@ -5,6 +5,13 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { z } = require('zod');
 const env = require('../config/env');
+const { isEmailConfigured, sendPasswordResetEmail } = require('../services/emailService');
+
+// Mesma resposta pra e-mail existente ou não: assim ninguém descobre, testando
+// e-mails aqui, quais têm conta cadastrada (evita "enumeração de usuários").
+const GENERIC_FORGOT_RESPONSE = {
+  message: 'Se existir uma conta com esse e-mail, enviamos um link de redefinição para ele.',
+};
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
@@ -35,9 +42,11 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'A nova senha deve ter ao menos 6 caracteres.')
 });
 
-// Nunca devolve o password_hash pro cliente — não tem por que sair da API
+// Nunca devolve pro cliente campos sensíveis de segurança: o password_hash
+// nem faz sentido sair da API, e o reset_token, se houver um reset pendente,
+// não pode vazar numa resposta (quem tivesse o token trocaria a senha).
 function toPublicUser(user) {
-  const { password_hash, ...publicUser } = user;
+  const { password_hash, reset_token, reset_token_expires, ...publicUser } = user;
   return publicUser;
 }
 
@@ -148,33 +157,41 @@ module.exports = {
     }
   },
 
-  // Versão simplificada, sem envio de e-mail (o projeto ainda não tem um
-  // serviço de e-mail configurado): o link de redefinição volta direto na
-  // resposta, pra tela mostrar. Antes de hospedar o site pra outras pessoas
-  // usarem, isso precisa virar um e-mail de verdade — aqui só serve porque,
-  // por enquanto, quem pede a redefinição é a mesma pessoa que vai ver a
-  // resposta na tela.
+  // O token de redefinição vai pro e-mail do dono da conta (canal que só ele
+  // controla) — NUNCA volta na resposta HTTP, senão qualquer um que soubesse
+  // o e-mail poderia pedir o link e trocar a senha da vítima. A resposta é
+  // sempre a mesma, exista a conta ou não (ver GENERIC_FORGOT_RESPONSE).
+  //
+  // Se o Gmail não estiver configurado (ex.: dev local), o link é impresso no
+  // console do servidor em vez de enviado — assim dá pra testar sem e-mail,
+  // e mesmo assim o token não vaza pela API.
   async forgotPassword(req, res, next) {
     try {
       const { email } = forgotPasswordSchema.parse(req.body);
 
       const user = await prisma.user.findUnique({ where: { email } });
-      if (!user) {
-        return res.status(404).json({ error: 'Não existe conta cadastrada com esse e-mail.' });
+
+      // Só gera token e envia se a conta existir — mas a resposta é a mesma
+      // dos dois jeitos, então de fora não dá pra distinguir os casos.
+      if (user) {
+        const token = crypto.randomBytes(32).toString('hex');
+        const reset_token_expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { reset_token: token, reset_token_expires }
+        });
+
+        const resetUrl = `${env.APP_BASE_URL}/reset-password.html?token=${token}`;
+
+        if (isEmailConfigured()) {
+          await sendPasswordResetEmail(user.email, resetUrl);
+        } else {
+          console.log(`[dev] Link de redefinição de senha para ${user.email}: ${resetUrl}`);
+        }
       }
 
-      const token = crypto.randomBytes(32).toString('hex');
-      const reset_token_expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { reset_token: token, reset_token_expires }
-      });
-
-      return res.status(200).json({
-        resetUrl: `/reset-password.html?token=${token}`,
-        expiresInMinutes: RESET_TOKEN_TTL_MS / 60000
-      });
+      return res.status(200).json(GENERIC_FORGOT_RESPONSE);
     } catch (error) {
       next(error);
     }

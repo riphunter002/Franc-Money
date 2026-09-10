@@ -79,7 +79,7 @@ routes.post('/login', loginLimiter, UserController.login);
  * @swagger
  * /forgot-password:
  *   post:
- *     summary: Pede a redefinição de senha (versão local — devolve o link direto, sem enviar e-mail)
+ *     summary: Pede a redefinição de senha (envia o link por e-mail; a resposta é genérica, não revela se o e-mail existe)
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -94,9 +94,7 @@ routes.post('/login', loginLimiter, UserController.login);
  *                 type: string
  *     responses:
  *       200:
- *         description: Link de redefinição gerado com sucesso
- *       404:
- *         description: Nenhuma conta com esse e-mail
+ *         description: Resposta genérica ("se existir uma conta, enviamos o link") — sempre a mesma, exista o e-mail ou não
  *       429:
  *         description: Limite de tentativas excedido (Rate Limit)
  */

@@ -79,7 +79,8 @@ Franc Money/
 │   ├── services/
 │   │   ├── dateRangeService.js        (intervalo do mês atual em UTC, compartilhado)
 │   │   ├── recurringTransactionService.js  (gera ocorrências de recorrências/parcelamentos)
-│   │   └── brapiService.js            (busca cotação na API da brapi.dev)
+│   │   ├── brapiService.js            (busca cotação na API da brapi.dev)
+│   │   └── emailService.js            (envia e-mail via Gmail — usado no reset de senha)
 │   ├── middlewares/
 │   │   ├── auth.js            (valida o JWT)
 │   │   ├── errorHandler.js
@@ -133,8 +134,8 @@ Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users`
 |---|---|---|
 | POST | `/users` | Cadastro. Body: `{ name, email, password }` |
 | POST | `/login` | Rate limit (5 tentativas / 15 min → 429) |
-| POST | `/forgot-password` | Gera link de redefinição (versão local: devolve o link direto na resposta, sem enviar e-mail de verdade) |
-| POST | `/reset-password` | Define nova senha a partir do token de `/forgot-password` |
+| POST | `/forgot-password` | Envia o link de redefinição por e-mail. Resposta genérica ("se existir uma conta, enviamos o link") — nunca devolve o token nem revela se o e-mail existe. Sem Gmail configurado, o link cai no console do servidor |
+| POST | `/reset-password` | Define nova senha a partir do token de `/forgot-password` (uso único, expira em 1h) |
 | GET | `/users` | Lista usuários (autenticado) |
 | PUT | `/users/password` | Troca a senha do usuário logado, exige a senha atual |
 | PUT | `/users/:id` | Atualiza nome/e-mail/senha — só o dono da conta pode |
@@ -170,9 +171,9 @@ Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users`
 - Cadastro (com fogos de artifício na tela de boas-vindas 🎆) e login automático
   em seguida, sessão persistida em `localStorage`/`sessionStorage` (conforme o
   checkbox "Manter conectado")
-- Recuperação de senha (versão local: sem envio de e-mail de verdade, o link
-  de redefinição aparece direto na tela) e troca de senha logado, na tela de
-  perfil
+- Recuperação de senha por e-mail: o `/forgot-password` envia um link (via
+  Gmail) que expira em 1h e é de uso único; o token vai só pro e-mail do dono,
+  nunca na resposta HTTP. Também há troca de senha logado, na tela de perfil
 - Perfil: editar nome, e-mail e senha
 - Dashboard: cartões de resumo, gráfico de evolução do saldo e gastos por
   categoria — dados reais agregados no front a partir de `/transactions` —,
@@ -232,7 +233,10 @@ O app está publicado em **https://franc-money.onrender.com**.
   `DATABASE_URL` (string de conexão do Neon), `JWT_SECRET` (gerado à parte,
   diferente do usado localmente), `BRAPI_API_TOKEN`, `ALLOWED_ORIGIN`
   (definido como `https://franc-money.onrender.com`, restringe o CORS só ao
-  próprio site).
+  próprio site), `APP_BASE_URL` (`https://franc-money.onrender.com`, usado pra
+  montar o link do e-mail de reset), `GMAIL_USER` e `GMAIL_APP_PASSWORD` (a
+  conta do Gmail que envia o e-mail de redefinição e a "senha de app" dela —
+  ver "Notas de segurança").
 - **"Sono" por inatividade**: tanto o Render quanto o Neon, no plano
   gratuito, hibernam depois de um tempo sem uso. A primeira visita depois
   disso demora uns 30-60 segundos pra acordar — normal do plano gratuito,
@@ -246,3 +250,11 @@ O app está publicado em **https://franc-money.onrender.com**.
   Isso é esperado; é uma ação deliberada, não algo para automatizar.
 - `ALLOWED_ORIGIN` no `.env` restringe o CORS. Sem essa variável, qualquer origem
   é aceita — aceitável em desenvolvimento, deve ser definido antes de publicar.
+- **Reset de senha por e-mail**: `GMAIL_USER` é o Gmail que envia, e
+  `GMAIL_APP_PASSWORD` é uma "senha de app" de 16 caracteres gerada em
+  https://myaccount.google.com/apppasswords (exige verificação em duas etapas
+  ativada na conta Google) — **não** é a senha normal do Gmail. Sem essas duas
+  variáveis, o app sobe normal e o link de reset é impresso no console do
+  servidor em vez de enviado (modo de desenvolvimento). O token de reset nunca
+  aparece na resposta da API, então saber o e-mail de alguém não basta pra
+  invadir a conta.

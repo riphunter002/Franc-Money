@@ -58,7 +58,11 @@ Franc Money/
 │   ├── import.html / .js      (importação de fatura via CSV)
 │   ├── profile.html / .js     (editar nome/e-mail/senha)
 │   ├── logo-escudo.png        (logo usada no menu lateral)
-│   └── favicon.png
+│   ├── favicon.png
+│   ├── manifest.json          (metadados da PWA: nome, ícone, cor)
+│   ├── sw.js                  (service worker: cacheia só os arquivos estáticos)
+│   ├── pwa.js                 (registra o service worker — incluído em TODA página)
+│   └── icons/                 (ícones da PWA em 192x192, 512x512 e apple-touch-icon)
 ├── src/
 │   ├── config/
 │   │   ├── env.js             (valida variáveis de ambiente com Zod)
@@ -98,6 +102,14 @@ Franc Money/
 - **`dashboard.css` é a folha de estilos compartilhada** de todas as telas
   internas (dashboard, transações, categorias). Estilos novos de telas internas
   vão nele, não em arquivos separados.
+- **`pwa.js` registra o service worker e vai em TODA página** (login, cadastro
+  e telas internas), diferente do `session.js`, que é só das telas internas.
+  Ele não depende de sessão nem toca no DOM.
+- **`sw.js` só cacheia arquivos estáticos** (CSS, JS, ícones) listados em
+  `PRECACHE_URLS` — nunca páginas HTML nem chamadas de API, pra nunca mostrar
+  dado financeiro desatualizado. Ao alterar CSS/JS, é preciso subir o
+  `CACHE_NAME` (ex.: `franc-money-v2`) pra invalidar o cache antigo do
+  navegador.
 - **`session.js` guarda tudo que é compartilhado entre telas autenticadas**:
   `getStoredAuth`, `clearStoredAuth`, `goToLogin`, `fetchWithAuth`,
   `currencyFormatter`, `dateFormatter`, `escapeHtml`, `extractErrorMessage`.
@@ -177,6 +189,8 @@ Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users`
 - Investimentos: carteira com cotações reais da B3 (via brapi.dev, atualizadas
   a cada 15 min) e simulador de juros compostos
 - Layout responsivo (menu hambúrguer em telas pequenas)
+- Instalável como app no celular (PWA): "Adicionar à tela inicial" abre em
+  tela cheia, com ícone próprio, sem barra do navegador
 - Logo e favicon próprios em todas as telas
 - Swagger documentado em `/api-docs`
 - Publicado em produção — ver seção "Produção" abaixo

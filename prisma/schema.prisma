@@ -26,6 +26,7 @@ model User {
   budgets       Budget[]
   importedTransactions ImportedTransaction[]
   recurringTransactions RecurringTransaction[]
+  investments   Investment[]
 
   @@map("users") // <-- Força a tabela a se chamar 'users'
 }
@@ -133,4 +134,26 @@ model Transaction {
   recurringTransaction RecurringTransaction? @relation(fields: [recurring_transaction_id], references: [id])
 
   @@map("transactions") // <-- Força a tabela a se chamar 'transactions'
+}
+
+// Um ativo (ação/FII da B3) que o usuário possui de verdade. A cotação
+// (current_price/price_updated_at) é um cache — atualizada sob demanda pela
+// API da brapi.dev quando estiver desatualizada, não a cada requisição (ver
+// src/services/brapiService.js).
+model Investment {
+  id               String    @id @default(uuid())
+  ticker           String
+  quantity         Decimal
+  average_price    Decimal
+  asset_name       String?
+  current_price    Decimal?
+  price_updated_at DateTime?
+  user_id          String
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([ticker, user_id])
+  @@map("investments") // <-- Força a tabela a se chamar 'investments'
 }

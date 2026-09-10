@@ -115,6 +115,79 @@
         </div>
       </header>
 
+      <!-- Carteira real, com cotação da B3 -->
+      <section class="summary-grid" aria-label="Resumo da carteira">
+        <div class="summary-card summary-card--balance">
+          <p class="summary-card__label">Valor da carteira</p>
+          <p class="summary-card__value" id="portfolioCurrentValue">R$ 0,00</p>
+          <p class="summary-card__hint" id="portfolioUpdatedHint"></p>
+        </div>
+
+        <div class="summary-card">
+          <p class="summary-card__label">Total investido</p>
+          <p class="summary-card__value" id="portfolioInvestedValue">R$ 0,00</p>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card__icon summary-card__icon--income" id="portfolioGainIcon" aria-hidden="true">↑</div>
+          <p class="summary-card__label">Ganho/perda</p>
+          <p class="summary-card__value summary-card__value--income" id="portfolioGainLoss">R$ 0,00</p>
+        </div>
+      </section>
+
+      <section class="panel panel--portfolio">
+        <div class="panel__header">
+          <h2 class="panel__title">Minha carteira</h2>
+        </div>
+
+        <p class="modal-hint">
+          Código do ativo na B3 (ex.: <code>PETR4</code>, <code>MXRF11</code>) — cotação real via
+          <a href="https://brapi.dev" target="_blank" rel="noopener">brapi.dev</a>.
+        </p>
+
+        <form id="portfolioForm" class="category-form" novalidate>
+          <div class="modal-field category-form__field">
+            <label for="portfolioTicker" class="modal-label">Código do ativo</label>
+            <input id="portfolioTicker" type="text" class="modal-input" placeholder="Ex.: PETR4" required />
+          </div>
+
+          <div class="modal-field category-form__field">
+            <label for="portfolioQuantity" class="modal-label">Quantidade</label>
+            <input id="portfolioQuantity" type="number" class="modal-input" min="0.01" step="0.01" placeholder="Ex.: 100" required />
+          </div>
+
+          <div class="modal-field category-form__field">
+            <label for="portfolioAvgPrice" class="modal-label">Preço médio pago (R$)</label>
+            <input id="portfolioAvgPrice" type="number" class="modal-input" min="0.01" step="0.01" placeholder="Ex.: 35,50" required />
+          </div>
+
+          <button type="submit" class="btn-gold category-form__submit" id="portfolioSubmitBtn">
+            + Adicionar
+          </button>
+        </form>
+
+        <p class="modal-error" id="portfolioFormError" role="alert"></p>
+
+        <div class="table-scroll">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th scope="col">Ativo</th>
+                <th scope="col" class="align-right">Quantidade</th>
+                <th scope="col" class="align-right">Preço médio</th>
+                <th scope="col" class="align-right">Preço atual</th>
+                <th scope="col" class="align-right">Valor atual</th>
+                <th scope="col" class="align-right">Ganho/perda</th>
+                <th scope="col" class="align-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="portfolioBody">
+              <!-- Preenchido dinamicamente por investments.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Formulário de simulação -->
       <section class="panel panel--investment-form">
         <div class="panel__header">

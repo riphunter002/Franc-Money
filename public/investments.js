@@ -146,6 +146,239 @@ function recalculate() {
   renderChart(investedPoints, valuePoints, months);
 }
 
+/* ==========================================================
+   Carteira de investimentos: ativos reais, com cotação buscada
+   via brapi.dev (ver InvestmentController no backend)
+   ========================================================== */
+const portfolioForm = document.getElementById("portfolioForm");
+const portfolioTickerInput = document.getElementById("portfolioTicker");
+const portfolioQuantityInput = document.getElementById("portfolioQuantity");
+const portfolioAvgPriceInput = document.getElementById("portfolioAvgPrice");
+const portfolioSubmitBtn = document.getElementById("portfolioSubmitBtn");
+const portfolioFormError = document.getElementById("portfolioFormError");
+const portfolioBody = document.getElementById("portfolioBody");
+
+function formatSignedPercent(value) {
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(2).replace(".", ",")}%`;
+}
+
+function renderPortfolioSummary(investments) {
+  const totalInvested = investments.reduce((sum, inv) => sum + inv.investedValue, 0);
+  const totalCurrent = investments.reduce((sum, inv) => sum + (inv.currentValue ?? inv.investedValue), 0);
+  const totalGain = totalCurrent - totalInvested;
+  const totalGainPercent = totalInvested > 0 ? (totalGain / totalInvested) * 100 : 0;
+  const isGain = totalGain >= 0;
+
+  document.getElementById("portfolioInvestedValue").textContent = currencyFormatter.format(totalInvested);
+  document.getElementById("portfolioCurrentValue").textContent = currencyFormatter.format(totalCurrent);
+
+  const gainEl = document.getElementById("portfolioGainLoss");
+  gainEl.textContent = `${currencyFormatter.format(totalGain)} (${formatSignedPercent(totalGainPercent)})`;
+  gainEl.classList.toggle("summary-card__value--income", isGain);
+  gainEl.classList.toggle("summary-card__value--expense", !isGain);
+
+  const iconEl = document.getElementById("portfolioGainIcon");
+  iconEl.textContent = isGain ? "↑" : "↓";
+  iconEl.classList.toggle("summary-card__icon--income", isGain);
+  iconEl.classList.toggle("summary-card__icon--expense", !isGain);
+
+  const lastUpdate = investments
+    .map((inv) => inv.price_updated_at)
+    .filter(Boolean)
+    .sort()
+    .pop();
+  const hintEl = document.getElementById("portfolioUpdatedHint");
+  hintEl.textContent = lastUpdate
+    ? `Cotação de ${new Date(lastUpdate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+    : "Nenhum ativo cadastrado ainda";
+}
+
+function renderPortfolio(investments) {
+  renderPortfolioSummary(investments);
+
+  if (!investments.length) {
+    portfolioBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
+          Você ainda não adicionou nenhum ativo à carteira.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  portfolioBody.innerHTML = investments
+    .map((inv) => {
+      const quantity = Number(inv.quantity);
+      const avgPrice = Number(inv.average_price);
+      const currentPrice = inv.current_price !== null ? Number(inv.current_price) : null;
+      const isGain = inv.gainLoss !== null && inv.gainLoss >= 0;
+
+      return `
+        <tr data-id="${inv.id}">
+          <td>
+            <div class="tx-desc"><strong>${escapeHtml(inv.ticker)}</strong></div>
+            <span style="color: var(--text-secondary); font-size: 12.5px;">${escapeHtml(inv.asset_name || "")}</span>
+          </td>
+          <td class="align-right">${quantity}</td>
+          <td class="align-right">${currencyFormatter.format(avgPrice)}</td>
+          <td class="align-right">${currentPrice !== null ? currencyFormatter.format(currentPrice) : "—"}</td>
+          <td class="align-right">${inv.currentValue !== null ? currencyFormatter.format(inv.currentValue) : "—"}</td>
+          <td class="align-right tx-amount ${inv.gainLoss === null ? "" : isGain ? "tx-amount--income" : "tx-amount--expense"}">
+            ${inv.gainLoss !== null ? `${isGain ? "+" : ""}${currencyFormatter.format(inv.gainLoss)} (${formatSignedPercent(inv.gainLossPercent)})` : "Cotação indisponível"}
+          </td>
+          <td class="align-right">
+            <div class="row-actions">
+              <button type="button" class="row-actions__btn" data-action="edit" data-id="${inv.id}">Editar</button>
+              <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${inv.id}">Excluir</button>
+            </div>
+          </td>
+        </tr>
+        <tr class="portfolio-edit-row" data-id="${inv.id}" hidden>
+          <td colspan="7">
+            <form class="budget-row__edit-form" data-id="${inv.id}">
+              <input type="number" class="modal-input" min="0.01" step="0.01" value="${quantity}" data-field="quantity" placeholder="Quantidade" />
+              <input type="number" class="modal-input" min="0.01" step="0.01" value="${avgPrice}" data-field="average_price" placeholder="Preço médio" />
+              <button type="submit" class="btn-gold">Salvar</button>
+              <button type="button" class="btn-secondary" data-action="cancel-edit">Cancelar</button>
+            </form>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+async function loadPortfolio(token) {
+  try {
+    const response = await fetchWithAuth("/investments", token);
+    if (!response.ok) return;
+    renderPortfolio(await response.json());
+  } catch (err) {
+    console.error("Erro ao carregar carteira:", err);
+  }
+}
+
+async function handlePortfolioDelete(id, token) {
+  const confirmed = window.confirm("Remover esse ativo da carteira? As transações que você já lançou não são afetadas.");
+  if (!confirmed) return;
+
+  try {
+    const response = await fetchWithAuth(`/investments/${id}`, token, { method: "DELETE" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(extractErrorMessage(data, "Não foi possível remover o ativo."));
+    await loadPortfolio(token);
+  } catch (err) {
+    window.alert(err.message || "Não foi possível remover o ativo.");
+  }
+}
+
+async function handlePortfolioEditSubmit(editForm, id, token) {
+  const quantity = Number(editForm.querySelector('[data-field="quantity"]').value);
+  const average_price = Number(editForm.querySelector('[data-field="average_price"]').value);
+
+  if (!quantity || quantity <= 0 || !average_price || average_price <= 0) {
+    window.alert("Informe valores maiores que zero.");
+    return;
+  }
+
+  try {
+    const response = await fetchWithAuth(`/investments/${id}`, token, {
+      method: "PUT",
+      body: JSON.stringify({ quantity, average_price }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(extractErrorMessage(data, "Não foi possível atualizar o ativo."));
+    await loadPortfolio(token);
+  } catch (err) {
+    window.alert(err.message || "Não foi possível atualizar o ativo.");
+  }
+}
+
+function initPortfolio(auth) {
+  portfolioForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    portfolioFormError.textContent = "";
+
+    const ticker = portfolioTickerInput.value.trim();
+    const quantity = Number(portfolioQuantityInput.value);
+    const average_price = Number(portfolioAvgPriceInput.value);
+
+    if (!ticker) {
+      portfolioFormError.textContent = "Informe o código do ativo.";
+      portfolioTickerInput.focus();
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      portfolioFormError.textContent = "Informe uma quantidade maior que zero.";
+      portfolioQuantityInput.focus();
+      return;
+    }
+    if (!average_price || average_price <= 0) {
+      portfolioFormError.textContent = "Informe um preço médio maior que zero.";
+      portfolioAvgPriceInput.focus();
+      return;
+    }
+
+    portfolioSubmitBtn.disabled = true;
+    portfolioSubmitBtn.textContent = "Buscando cotação...";
+
+    try {
+      const response = await fetchWithAuth("/investments", auth.token, {
+        method: "POST",
+        body: JSON.stringify({ ticker, quantity, average_price }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(extractErrorMessage(data, "Não foi possível adicionar o ativo."));
+      }
+
+      portfolioForm.reset();
+      await loadPortfolio(auth.token);
+    } catch (err) {
+      portfolioFormError.textContent = err.message || "Não foi possível adicionar o ativo.";
+    } finally {
+      portfolioSubmitBtn.disabled = false;
+      portfolioSubmitBtn.textContent = "+ Adicionar";
+    }
+  });
+
+  // Delegação de eventos: cobre Editar/Excluir/Cancelar de qualquer linha,
+  // mesmo depois que a tabela é recriada a cada atualização de cotação
+  portfolioBody.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const { action, id } = button.dataset;
+
+    if (action === "delete") {
+      handlePortfolioDelete(id, auth.token);
+      return;
+    }
+
+    if (action === "edit") {
+      const editRow = portfolioBody.querySelector(`.portfolio-edit-row[data-id="${id}"]`);
+      if (editRow) editRow.hidden = false;
+      return;
+    }
+
+    if (action === "cancel-edit") {
+      const editRow = button.closest(".portfolio-edit-row");
+      if (editRow) editRow.hidden = true;
+    }
+  });
+
+  portfolioBody.addEventListener("submit", (event) => {
+    const editForm = event.target.closest(".budget-row__edit-form");
+    if (!editForm) return;
+    event.preventDefault();
+    handlePortfolioEditSubmit(editForm, editForm.dataset.id, auth.token);
+  });
+
+  loadPortfolio(auth.token);
+}
+
 /* ----------------------------------------------------------
    Inicialização da página
    ---------------------------------------------------------- */
@@ -163,6 +396,8 @@ function initInvestmentsPage() {
       goToLogin();
     });
   }
+
+  initPortfolio(auth);
 
   [initialInput, monthlyInput, rateInput, yearsInput].forEach((input) => {
     input.addEventListener("input", recalculate);

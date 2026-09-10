@@ -10,6 +10,10 @@ const envSchema = z.object({
   // (ex.: "https://francmoney.com"). Aceita múltiplos domínios separados por vírgula.
   // Se não for definido, libera qualquer origem — só recomendado em desenvolvimento.
   ALLOWED_ORIGIN: z.string().optional().default('*'),
+  // Token da brapi.dev (https://brapi.dev), usado pra buscar cotação real de
+  // ações/FIIs na tela de Investimentos. Sem token, a API só libera 4
+  // tickers de teste — praticamente inútil pra uma carteira de verdade.
+  BRAPI_API_TOKEN: z.string().min(1, 'BRAPI_API_TOKEN é obrigatório para buscar cotações reais.'),
 });
 
 const _env = envSchema.safeParse(process.env);

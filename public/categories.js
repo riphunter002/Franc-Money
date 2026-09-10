@@ -8,8 +8,17 @@ const listEl = document.getElementById("categoryManageList");
 const presetGridEl = document.getElementById("presetGrid");
 const form = document.getElementById("categoryForm");
 const nameInput = document.getElementById("categoryName");
+const colorToggle = document.getElementById("categoryColorToggle");
+const colorInput = document.getElementById("categoryColor");
 const submitBtn = document.getElementById("categorySubmitBtn");
 const formError = document.getElementById("categoryFormError");
+
+// A cor só é enviada se a pessoa realmente marcar a caixa "Escolher uma
+// cor" — sem isso, o backend atribui uma cor automática (por hash do
+// nome), que já é um comportamento razoável por padrão
+colorToggle.addEventListener("change", () => {
+  colorInput.hidden = !colorToggle.checked;
+});
 
 const TYPE_LABELS = { EXPENSE: "Despesa", INCOME: "Receita" };
 
@@ -56,6 +65,7 @@ function renderCategories(categories) {
         <li class="manage-row" data-id="${category.id}">
           <div class="manage-row__header">
             <span class="manage-row__name">
+              <span class="category-row__dot" style="background:${escapeHtml(category.color)}"></span>
               ${escapeHtml(category.name)}
               <span class="tag">${TYPE_LABELS[category.type] || category.type}</span>
             </span>
@@ -71,6 +81,7 @@ function renderCategories(categories) {
 
           <form class="manage-row__edit-form" data-id="${category.id}" hidden>
             <input type="text" class="modal-input" value="${escapeHtml(category.name)}" required />
+            <input type="color" class="color-input" value="${escapeHtml(category.color)}" title="Cor da categoria" />
             <fieldset class="type-toggle">
               <legend class="modal-label">Tipo</legend>
               <label class="type-toggle__option">
@@ -195,6 +206,7 @@ async function handleDelete(id, token) {
    ---------------------------------------------------------- */
 async function handleEditSubmit(editForm, id, token) {
   const nameInput = editForm.querySelector('input[type="text"]');
+  const colorInput = editForm.querySelector('input[type="color"]');
   const typeInput = editForm.querySelector('input[type="radio"]:checked');
 
   const name = nameInput.value.trim();
@@ -206,7 +218,7 @@ async function handleEditSubmit(editForm, id, token) {
   try {
     const response = await fetchWithAuth(`/categories/${id}`, token, {
       method: "PUT",
-      body: JSON.stringify({ name, type: typeInput.value }),
+      body: JSON.stringify({ name, type: typeInput.value, color: colorInput.value }),
     });
 
     const data = await response.json().catch(() => ({}));
@@ -263,12 +275,15 @@ function initCategoriesPage() {
       return;
     }
 
+    const payload = { name, type };
+    if (colorToggle.checked) payload.color = colorInput.value;
+
     setSubmitting(true);
 
     try {
       const response = await fetchWithAuth("/categories", auth.token, {
         method: "POST",
-        body: JSON.stringify({ name, type }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -280,6 +295,7 @@ function initCategoriesPage() {
       }
 
       form.reset();
+      colorInput.hidden = true;
       await loadCategories(auth.token);
     } catch (err) {
       setFormError(err.message || "Não foi possível criar a categoria.");

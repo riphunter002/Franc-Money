@@ -8,7 +8,10 @@ const categorySchema = z.object({
   // mandar o campo); a tela sempre manda o valor escolhido no toggle
   type: z.enum(['INCOME', 'EXPENSE'], {
     errorMap: () => ({ message: 'O tipo deve ser estritamente INCOME ou EXPENSE.' })
-  }).default('EXPENSE')
+  }).default('EXPENSE'),
+  // Opcional: se não vier, cai no automático (pickColorForName). A tela só
+  // manda isso quando a pessoa marca "Escolher uma cor".
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Cor inválida — use o formato #RRGGBB.').optional()
 });
 
 const updateCategorySchema = categorySchema.partial();
@@ -39,11 +42,11 @@ function pickColorForName(name) {
 module.exports = {
   async create(req, res, next) {
     try {
-      const { name, type } = categorySchema.parse(req.body);
+      const { name, type, color } = categorySchema.parse(req.body);
       const user_id = req.userId;
 
       const category = await prisma.category.create({
-        data: { name, type, user_id, color: pickColorForName(name) }
+        data: { name, type, user_id, color: color || pickColorForName(name) }
       });
 
       return res.status(201).json(category);
@@ -72,7 +75,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const user_id = req.userId;
-      const { name, type } = updateCategorySchema.parse(req.body);
+      const { name, type, color } = updateCategorySchema.parse(req.body);
 
       const existingCategory = await prisma.category.findFirst({
         where: { id, user_id }
@@ -83,7 +86,7 @@ module.exports = {
 
       const category = await prisma.category.update({
         where: { id },
-        data: { name, type }
+        data: { name, type, color }
       });
 
       return res.status(200).json(category);

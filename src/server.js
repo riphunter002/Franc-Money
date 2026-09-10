@@ -44,6 +44,9 @@ app.use(investmentRoutes);
 // Middleware global de erros
 app.use(errorHandler);
 
-app.listen(3333, () => {
-  console.log('Servidor iniciado na porta 3333');
+// env.PORT já vem validado com default 3333 (ver src/config/env.js). Local
+// continua na 3333 de sempre; hospedagens como o Render atribuem a porta
+// pela variável PORT, então não dá pra deixar fixa.
+app.listen(env.PORT, () => {
+  console.log(`Servidor iniciado na porta ${env.PORT}`);
 });

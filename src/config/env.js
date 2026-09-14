@@ -18,14 +18,16 @@ const envSchema = z.object({
   // e-mail. Local: http://localhost:3333. Em produção, defina com a URL
   // real do site (ex.: https://franc-money.onrender.com).
   APP_BASE_URL: z.string().url().default('http://localhost:3333'),
-  // Credenciais do Gmail que ENVIA o e-mail de redefinição de senha.
-  // GMAIL_APP_PASSWORD é a "senha de app" (16 caracteres) gerada em
-  // https://myaccount.google.com/apppasswords — NÃO é a senha normal da
-  // conta (exige verificação em duas etapas ativada). São opcionais: sem
-  // elas, o app sobe normal e o link de reset cai no console do servidor
+  // Chave da API do Resend (https://resend.com), usada pra enviar o e-mail de
+  // redefinição de senha. Pegue em https://resend.com/api-keys. É opcional:
+  // sem ela, o app sobe normal e o link de reset cai no console do servidor
   // em vez de ser enviado (útil pra desenvolvimento local).
-  GMAIL_USER: z.string().email().optional(),
-  GMAIL_APP_PASSWORD: z.string().min(1).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  // Remetente do e-mail. No plano gratuito SEM domínio próprio, precisa ser
+  // exatamente 'onboarding@resend.dev' e só envia pro e-mail da sua conta
+  // Resend. Com um domínio verificado no Resend, pode virar algo como
+  // 'Franc Money <nao-responda@seudominio.com>'.
+  RESEND_FROM: z.string().default('Franc Money <onboarding@resend.dev>'),
 });
 
 const _env = envSchema.safeParse(process.env);

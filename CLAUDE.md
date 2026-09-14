@@ -80,7 +80,7 @@ Franc Money/
 │   │   ├── dateRangeService.js        (intervalo do mês atual em UTC, compartilhado)
 │   │   ├── recurringTransactionService.js  (gera ocorrências de recorrências/parcelamentos)
 │   │   ├── brapiService.js            (busca cotação na API da brapi.dev)
-│   │   └── emailService.js            (envia e-mail via Gmail — usado no reset de senha)
+│   │   └── emailService.js            (envia e-mail via Resend — usado no reset de senha)
 │   ├── middlewares/
 │   │   ├── auth.js            (valida o JWT)
 │   │   ├── errorHandler.js
@@ -172,7 +172,7 @@ Autenticação por `Authorization: Bearer <token>` em tudo, exceto `POST /users`
   em seguida, sessão persistida em `localStorage`/`sessionStorage` (conforme o
   checkbox "Manter conectado")
 - Recuperação de senha por e-mail: o `/forgot-password` envia um link (via
-  Gmail) que expira em 1h e é de uso único; o token vai só pro e-mail do dono,
+  Resend) que expira em 1h e é de uso único; o token vai só pro e-mail do dono,
   nunca na resposta HTTP. Também há troca de senha logado, na tela de perfil
 - Perfil: editar nome, e-mail e senha
 - Dashboard: cartões de resumo, gráfico de evolução do saldo e gastos por
@@ -234,9 +234,9 @@ O app está publicado em **https://franc-money.onrender.com**.
   diferente do usado localmente), `BRAPI_API_TOKEN`, `ALLOWED_ORIGIN`
   (definido como `https://franc-money.onrender.com`, restringe o CORS só ao
   próprio site), `APP_BASE_URL` (`https://franc-money.onrender.com`, usado pra
-  montar o link do e-mail de reset), `GMAIL_USER` e `GMAIL_APP_PASSWORD` (a
-  conta do Gmail que envia o e-mail de redefinição e a "senha de app" dela —
-  ver "Notas de segurança").
+  montar o link do e-mail de reset) e `RESEND_API_KEY` (chave do Resend que
+  envia o e-mail de redefinição — ver "Notas de segurança"). Opcionalmente
+  `RESEND_FROM`, se um dia houver um domínio próprio verificado no Resend.
 - **"Sono" por inatividade**: tanto o Render quanto o Neon, no plano
   gratuito, hibernam depois de um tempo sem uso. A primeira visita depois
   disso demora uns 30-60 segundos pra acordar — normal do plano gratuito,
@@ -250,11 +250,12 @@ O app está publicado em **https://franc-money.onrender.com**.
   Isso é esperado; é uma ação deliberada, não algo para automatizar.
 - `ALLOWED_ORIGIN` no `.env` restringe o CORS. Sem essa variável, qualquer origem
   é aceita — aceitável em desenvolvimento, deve ser definido antes de publicar.
-- **Reset de senha por e-mail**: `GMAIL_USER` é o Gmail que envia, e
-  `GMAIL_APP_PASSWORD` é uma "senha de app" de 16 caracteres gerada em
-  https://myaccount.google.com/apppasswords (exige verificação em duas etapas
-  ativada na conta Google) — **não** é a senha normal do Gmail. Sem essas duas
-  variáveis, o app sobe normal e o link de reset é impresso no console do
-  servidor em vez de enviado (modo de desenvolvimento). O token de reset nunca
-  aparece na resposta da API, então saber o e-mail de alguém não basta pra
-  invadir a conta.
+- **Reset de senha por e-mail**: `RESEND_API_KEY` é a chave da API do Resend
+  (https://resend.com/api-keys) que envia o e-mail de redefinição. Sem ela, o
+  app sobe normal e o link de reset é impresso no console do servidor em vez de
+  enviado (modo de desenvolvimento). No plano gratuito do Resend SEM domínio
+  próprio, o remetente é `onboarding@resend.dev` e só dá pra enviar pro e-mail
+  da própria conta Resend — por isso a conta do Franc Money precisa usar o
+  mesmo e-mail com que o Resend foi cadastrado. O token de reset nunca aparece
+  na resposta da API, então saber o e-mail de alguém não basta pra invadir a
+  conta.

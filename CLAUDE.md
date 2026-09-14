@@ -62,7 +62,8 @@ Franc Money/
 │   ├── manifest.json          (metadados da PWA: nome, ícone, cor)
 │   ├── sw.js                  (service worker: cacheia só os arquivos estáticos)
 │   ├── pwa.js                 (registra o service worker — incluído em TODA página)
-│   └── icons/                 (ícones da PWA em 192x192, 512x512 e apple-touch-icon)
+│   ├── icons/                 (ícones da PWA em 192x192, 512x512 e apple-touch-icon)
+│   └── screenshots/           (imagens usadas no README, não fazem parte do app)
 ├── src/
 │   ├── config/
 │   │   ├── env.js             (valida variáveis de ambiente com Zod)

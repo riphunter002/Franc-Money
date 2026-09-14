@@ -11,6 +11,11 @@ the database to the UI, deployed to production.
 (free-tier hosting — if the app is "asleep", the first load can take
 30–60 seconds)
 
+<p align="center">
+  <img src="public/screenshots/dashboard.png" alt="Franc Money dashboard showing financial summary, balance evolution chart, and spending by category" width="49%" />
+  <img src="public/screenshots/investments.png" alt="Franc Money investments screen showing a stock portfolio and a compound interest simulator" width="49%" />
+</p>
+
 ---
 
 ## About the project

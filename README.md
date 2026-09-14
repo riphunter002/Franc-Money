@@ -11,6 +11,11 @@ interface, publicado em produção.
 (hospedagem gratuita — se o app estiver "dormindo", o primeiro carregamento
 pode levar de 30 a 60 segundos)
 
+<p align="center">
+  <img src="public/screenshots/dashboard.png" alt="Painel do Franc Money com resumo financeiro, gráfico de evolução do saldo e gastos por categoria" width="49%" />
+  <img src="public/screenshots/investments.png" alt="Tela de investimentos do Franc Money com carteira de ações e simulador de juros compostos" width="49%" />
+</p>
+
 ---
 
 ## Sobre o projeto

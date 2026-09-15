@@ -12,8 +12,7 @@ the database to the UI, deployed to production.
 30–60 seconds)
 
 <p align="center">
-  <img src="public/screenshots/dashboard.png" alt="Franc Money dashboard showing financial summary, balance evolution chart, and spending by category" width="49%" />
-  <img src="public/screenshots/investments.png" alt="Franc Money investments screen showing a stock portfolio and a compound interest simulator" width="49%" />
+  <img src="public/screenshots/dashboard.png" alt="Franc Money dashboard showing financial summary, balance evolution chart, and spending by category" width="90%" />
 </p>
 
 ---
@@ -46,6 +45,41 @@ anyone to sign up and try.
 - **Installable PWA** — works as a phone app ("Add to Home Screen"), with a
   responsive layout
 - **Interactive API docs** — Swagger at `/api-docs`
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/transactions.png" alt="Transactions screen with type and date-range filters" />
+      <p align="center"><sub>Transactions — filter, edit, delete</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/categories.png" alt="Categories screen with type and color" />
+      <p align="center"><sub>Categories — type and color per category</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/budgets.png" alt="Budgets screen with progress bars in different states" />
+      <p align="center"><sub>Budgets — progress per category</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/investments.png" alt="Investments screen with portfolio and compound interest simulator" />
+      <p align="center"><sub>Investments — real B3 quotes</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/import.png" alt="CSV import screen with rows pending review" />
+      <p align="center"><sub>CSV import — review before confirming</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/profile.png" alt="Profile screen with name, email, and password editing" />
+      <p align="center"><sub>Profile — account details and password change</sub></p>
+    </td>
+  </tr>
+</table>
 
 ## Notable technical decisions
 

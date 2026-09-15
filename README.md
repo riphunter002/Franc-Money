@@ -12,8 +12,7 @@ interface, publicado em produção.
 pode levar de 30 a 60 segundos)
 
 <p align="center">
-  <img src="public/screenshots/dashboard.png" alt="Painel do Franc Money com resumo financeiro, gráfico de evolução do saldo e gastos por categoria" width="49%" />
-  <img src="public/screenshots/investments.png" alt="Tela de investimentos do Franc Money com carteira de ações e simulador de juros compostos" width="49%" />
+  <img src="public/screenshots/dashboard.png" alt="Painel do Franc Money com resumo financeiro, gráfico de evolução do saldo e gastos por categoria" width="90%" />
 </p>
 
 ---
@@ -46,6 +45,41 @@ a qualquer pessoa criar uma conta e experimentar.
 - **PWA instalável** — funciona como app no celular ("Adicionar à tela
   inicial"), com layout responsivo
 - **Documentação interativa da API** — Swagger em `/api-docs`
+
+## Capturas de tela
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/transactions.png" alt="Tela de transações com filtros por tipo e período" />
+      <p align="center"><sub>Transações — filtros, edição e exclusão</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/categories.png" alt="Tela de categorias com tipo e cor" />
+      <p align="center"><sub>Categorias — tipo e cor por categoria</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/budgets.png" alt="Tela de orçamentos com barra de progresso em diferentes estados" />
+      <p align="center"><sub>Orçamentos — progresso por categoria</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/investments.png" alt="Tela de investimentos com carteira e simulador de juros compostos" />
+      <p align="center"><sub>Investimentos — cotação real da B3</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="public/screenshots/import.png" alt="Tela de importação de CSV com linhas pendentes de revisão" />
+      <p align="center"><sub>Importação de CSV — revisão antes de confirmar</sub></p>
+    </td>
+    <td width="50%">
+      <img src="public/screenshots/profile.png" alt="Tela de perfil com edição de nome, e-mail e senha" />
+      <p align="center"><sub>Perfil — dados da conta e troca de senha</sub></p>
+    </td>
+  </tr>
+</table>
 
 ## Decisões técnicas de destaque
 

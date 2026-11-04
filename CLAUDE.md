@@ -201,6 +201,21 @@ O plano original de evolução (schema → cadastro → orçamentos → investim
 foi concluído; itens novos a partir daqui entram direto nesta lista conforme
 forem implementados.
 
+## Verificação das correções financeiras
+
+- O saldo atual exclui datas futuras; receitas e despesas mensais continuam
+  representando o mês inteiro, incluindo parcelas previstas.
+- O importador diferencia ponto decimal no CSV Nubank de ponto de milhar
+  no CSV brasileiro. A correção vale para novas importações.
+- A geração de recorrências reserva o contador em uma transação do banco
+  para evitar duplicações entre consultas simultâneas. Cadastro e parcelas
+  também são gravados de forma atômica.
+- Execute npm test para os testes do importador. Para executar também a
+  integração com PostgreSQL descartável, siga tests/README.md. Nunca use o
+  banco de desenvolvimento ou produção nos testes de integração.
+- Duplicações e valores incorretos já existentes precisam de revisão
+  separada: estas correções não alteram o histórico salvo.
+
 ## Comandos
 
 ```bash

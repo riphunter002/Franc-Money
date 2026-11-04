@@ -51,7 +51,9 @@ async function materializeOccurrences(prisma, recurring, uptoCount) {
 
 // Roda ao criar uma RecurringTransaction: se for parcelada, gera todas as
 // parcelas de uma vez (já sabemos quantas são); se for recorrente sem fim,
-// gera só a primeira ocorrência (o resto vem da checagem preguiçosa abaixo)
+// gera só a primeira ocorrência (o resto vem da checagem preguiçosa abaixo).
+// O controller fornece o cliente da transação: cadastro e parcelas devem
+// ser confirmados juntos, ou revertidos juntos se qualquer gravação falhar.
 async function generateInitialOccurrences(prisma, recurring) {
   const target = recurring.installments_total || 1;
   const generated = await materializeOccurrences(prisma, recurring, target);
@@ -83,10 +85,24 @@ async function generateDueRecurringTransactions(prisma, userId) {
     const shouldHaveGenerated = monthsBetweenUTC(recurring.start_date, now) + 1;
     if (shouldHaveGenerated <= recurring.installments_generated) continue;
 
-    await materializeOccurrences(prisma, recurring, shouldHaveGenerated);
-    await prisma.recurringTransaction.update({
-      where: { id: recurring.id },
-      data: { installments_generated: shouldHaveGenerated }
+    await prisma.$transaction(async (tx) => {
+      // Reserva o intervalo somente se ninguém o gerou desde a leitura.
+      // O UPDATE condicional bloqueia a linha no PostgreSQL e reavalia o
+      // contador após esperar outra transação. Funciona entre processos,
+      // inclusive quando /summary e /transactions chegam ao mesmo tempo.
+      const claimed = await tx.recurringTransaction.updateMany({
+        where: {
+          id: recurring.id,
+          user_id: userId,
+          active: true,
+          installments_generated: recurring.installments_generated
+        },
+        data: { installments_generated: shouldHaveGenerated }
+      });
+      if (claimed.count === 0) return;
+
+      // Se uma parcela falhar, o banco reverte também a reserva do contador.
+      await materializeOccurrences(tx, recurring, shouldHaveGenerated);
     });
   }
 }

@@ -23,23 +23,24 @@ module.exports = {
         recurringSchema.parse(req.body);
       const user_id = req.userId;
 
-      const recurring = await prisma.recurringTransaction.create({
-        data: {
-          title,
-          description,
-          amount,
-          type,
-          category_id,
-          start_date,
-          installments_total: installments_total || null,
-          user_id
-        }
-      });
+      const updated = await prisma.$transaction(async (tx) => {
+        const recurring = await tx.recurringTransaction.create({
+          data: {
+            title,
+            description,
+            amount,
+            type,
+            category_id,
+            start_date,
+            installments_total: installments_total || null,
+            user_id
+          }
+        });
 
-      // Parcelada: gera todas as parcelas já aqui. Recorrente sem fim: gera
-      // só a primeira ocorrência (o resto vem da checagem preguiçosa em
-      // TransactionController, toda vez que o usuário abrir a lista/resumo)
-      const updated = await generateInitialOccurrences(prisma, recurring);
+        // Cadastro, parcelas e contador são uma operação atômica. Uma falha
+        // não pode deixar metade da compra registrada no saldo do usuário.
+        return generateInitialOccurrences(tx, recurring);
+      });
 
       return res.status(201).json(updated);
     } catch (error) {

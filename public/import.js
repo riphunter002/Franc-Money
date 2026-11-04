@@ -34,6 +34,13 @@ function parseBRLNumber(text) {
   return Number(cleaned);
 }
 
+// O CSV Nubank também pode usar ponto decimal (12.34). Remover esse
+// ponto multiplicaria o valor por 100. Mantém compatibilidade com
+// arquivos antigos que trazem vírgula decimal entre aspas.
+function parseNubankNumber(text) {
+  return text.includes(",") ? parseBRLNumber(text) : Number(text.trim());
+}
+
 /* ----------------------------------------------------------
    "05/09/2026" -> "2026-09-05" (formato que o <input type="date">
    e o backend esperam)
@@ -106,14 +113,14 @@ function detectCsvFormat(firstLine) {
   const headerLower = firstLine.trim().toLowerCase();
 
   if (headerLower === "date,title,amount") {
-    return { delimiter: ",", dateParser: parseIsoDate, hasHeader: true };
+    return { delimiter: ",", dateParser: parseIsoDate, amountParser: parseNubankNumber, hasHeader: true };
   }
 
   if (headerLower.split(";")[0]?.trim() === "data") {
-    return { delimiter: ";", dateParser: parseBRDate, hasHeader: true };
+    return { delimiter: ";", dateParser: parseBRDate, amountParser: parseBRLNumber, hasHeader: true };
   }
 
-  return { delimiter: ";", dateParser: parseBRDate, hasHeader: false };
+  return { delimiter: ";", dateParser: parseBRDate, amountParser: parseBRLNumber, hasHeader: false };
 }
 
 /* ----------------------------------------------------------
@@ -124,7 +131,7 @@ function parseCsv(text) {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (!lines.length) return { rows: [], errors: [] };
 
-  const { delimiter, dateParser, hasHeader } = detectCsvFormat(lines[0]);
+  const { delimiter, dateParser, amountParser, hasHeader } = detectCsvFormat(lines[0]);
   const rows = [];
   const errors = [];
 
@@ -140,9 +147,9 @@ function parseCsv(text) {
     const [rawDate, rawTitle, rawAmount] = parts;
     const date = dateParser(rawDate);
     const title = rawTitle.trim();
-    const amount = parseBRLNumber(rawAmount);
+    const amount = amountParser(rawAmount);
 
-    if (!date || !title || !amount || Number.isNaN(amount) || amount <= 0) {
+    if (!date || !title || !Number.isFinite(amount) || amount <= 0) {
       errors.push(`linha ${index + 1} (dados inválidos)`);
       return;
     }

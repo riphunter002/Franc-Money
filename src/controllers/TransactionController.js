@@ -27,6 +27,15 @@ module.exports = {
       const { title, description, amount, type, date, category_id } = transactionSchema.parse(req.body);
       const user_id = req.userId;
 
+      if (category_id != null) {
+        const category = await prisma.category.findFirst({
+          where: { id: category_id, user_id }
+        });
+        if (!category) {
+          return res.status(404).json({ error: 'Categoria não encontrada ou acesso negado.' });
+        }
+      }
+
       const transaction = await prisma.transaction.create({
         data: { title, description, amount, type, date, user_id, category_id },
       });
@@ -102,10 +111,11 @@ module.exports = {
         where: { user_id: userId }
       });
 
-      // "Saldo atual" continua somando tudo desde sempre (é um saldo de
-      // verdade, faz sentido ser vitalício). Já "receitas"/"despesas" agora
-      // são só do mês atual -- antes somavam o histórico inteiro, apesar do
-      // rótulo na tela dizer "no período".
+      // O saldo atual inclui o histórico até hoje, sem antecipar parcelas
+      // ou receitas futuras. Os indicadores mensais mantêm o mês completo.
+      // Datas do app usam o dia em UTC, então inclui também todo o dia atual.
+      const endOfToday = new Date();
+      endOfToday.setUTCHours(24, 0, 0, 0);
       const { start, end } = currentMonthRangeUTC();
 
       const summary = transactions.reduce((acc, transaction) => {
@@ -114,10 +124,10 @@ module.exports = {
 
         if (transaction.type === 'INCOME') {
           if (isCurrentMonth) acc.income += amount;
-          acc.total += amount;
+          if (transaction.date < endOfToday) acc.total += amount;
         } else if (transaction.type === 'EXPENSE') {
           if (isCurrentMonth) acc.expense += amount;
-          acc.total -= amount;
+          if (transaction.date < endOfToday) acc.total -= amount;
         }
 
         return acc;
@@ -142,6 +152,15 @@ module.exports = {
 
       if (!existingTransaction) {
         return res.status(404).json({ error: 'Transação não encontrada ou acesso negado.' });
+      }
+
+      if (category_id != null) {
+        const category = await prisma.category.findFirst({
+          where: { id: category_id, user_id }
+        });
+        if (!category) {
+          return res.status(404).json({ error: 'Categoria não encontrada ou acesso negado.' });
+        }
       }
 
       const transaction = await prisma.transaction.update({

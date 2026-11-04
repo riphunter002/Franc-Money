@@ -22,5 +22,10 @@ rollback de parcelamentos após falha e exclusão de datas futuras do saldo atua
 Também verificam propriedade de categorias em POST/PUT de transações manuais:
 categorias alheias/inexistentes são rejeitadas sem alterar dados; categorias
 próprias, campo ausente e null preservam os contratos. Formatos inválidos seguem
-a validação Zod, e transações alheias continuam protegidas. Importações e
-recorrências ainda não estão cobertas por esta validação de categorias.
+a validação Zod, e transações alheias continuam protegidas.
+
+Confirmação de importações e criação de recorrências/parcelamentos também
+validam categorias. Os testes conferem a categoria final da revisão (inclusive
+persistida), rejeição sem perder a pendência, alteração explícita para categoria
+própria/null e as categorias de todas as ocorrências geradas. Não há saneamento
+automático de vínculos históricos ou mudança da geração de recorrências antigas.

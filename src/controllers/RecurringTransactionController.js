@@ -23,6 +23,15 @@ module.exports = {
         recurringSchema.parse(req.body);
       const user_id = req.userId;
 
+      if (category_id != null) {
+        const category = await prisma.category.findFirst({
+          where: { id: category_id, user_id }
+        });
+        if (!category) {
+          return res.status(404).json({ error: 'Categoria não encontrada ou acesso negado.' });
+        }
+      }
+
       const updated = await prisma.$transaction(async (tx) => {
         const recurring = await tx.recurringTransaction.create({
           data: {

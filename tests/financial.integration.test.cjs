@@ -22,6 +22,7 @@ if (!connectionString) {
   require.cache[configPath] = { id: configPath, filename: configPath, loaded: true, exports: prisma };
   const transactions = require('../src/controllers/TransactionController');
   const recurringController = require('../src/controllers/RecurringTransactionController');
+  const importedController = require('../src/controllers/ImportedTransactionController');
   const { generateDueRecurringTransactions } = require('../src/services/recurringTransactionService');
 
   before(async () => {
@@ -161,6 +162,173 @@ if (!connectionString) {
     assert.equal(saved.title, 'Privada');
     assert.equal(saved.category_id, null);
   });
+
+  for (const scenario of [
+    { name: 'categoria alheia enviada na revisão', source: 'override', category: 'foreign' },
+    { name: 'categoria alheia já salva no item', source: 'saved', category: 'foreign' },
+    { name: 'categoria inexistente enviada na revisão', source: 'override', category: 'missing' }
+  ]) {
+    test(`confirmar importação rejeita ${scenario.name} e preserva pendência`, async () => {
+      const owner = await user();
+      const other = await user();
+      const category = await prisma.category.create({ data: { name: 'Privada', user_id: other.id } });
+      const item = await prisma.importedTransaction.create({ data: {
+        user_id: owner.id, title: 'Pendente', amount: 25, date: new Date('2026-11-04'),
+        category_id: scenario.source === 'saved' ? category.id : null
+      } });
+      const res = response();
+      const body = scenario.source === 'saved' ? {} : {
+        title: 'Tentativa', user_id: other.id,
+        category_id: scenario.category === 'missing' ? randomUUID() : category.id
+      };
+      await importedController.confirm({ userId: owner.id, params: { id: item.id }, body }, res,
+        (err) => { throw err; });
+      assert.equal(res.statusCode, 404);
+      assert.deepEqual(res.body, { error: 'Categoria não encontrada ou acesso negado.' });
+      assert.equal(await prisma.transaction.count({ where: { user_id: owner.id } }), 0);
+      const saved = await prisma.importedTransaction.findUnique({ where: { id: item.id } });
+      assert.equal(saved.title, 'Pendente');
+      assert.equal(saved.category_id, item.category_id);
+      assert.equal(Number(saved.amount), 25);
+    });
+  }
+
+  for (const scenario of ['categoria própria na revisão', 'categoria própria salva', 'remover categoria', 'sem categoria']) {
+    test(`confirmar importação permite ${scenario}`, async () => {
+      const owner = await user();
+      const category = await prisma.category.create({ data: { name: 'Minha', user_id: owner.id } });
+      const item = await prisma.importedTransaction.create({ data: {
+        user_id: owner.id, title: 'Pendente', amount: 25, date: new Date('2026-11-04'),
+        category_id: ['categoria própria salva', 'remover categoria'].includes(scenario) ? category.id : null
+      } });
+      const body = scenario === 'categoria própria na revisão' ? { category_id: category.id }
+        : scenario === 'remover categoria' ? { category_id: null } : {};
+      const expectedCategory = scenario.startsWith('categoria própria') ? category.id : null;
+      const res = response();
+      await importedController.confirm({ userId: owner.id, params: { id: item.id }, body }, res,
+        (err) => { throw err; });
+      assert.equal(res.statusCode, 201);
+      const saved = await prisma.transaction.findUnique({ where: { id: res.body.id } });
+      assert.equal(saved.user_id, owner.id);
+      assert.equal(saved.category_id, expectedCategory);
+      assert.equal(Number(saved.amount), 25);
+      assert.equal(await prisma.importedTransaction.findUnique({ where: { id: item.id } }), null);
+    });
+  }
+
+  test('confirmar importação continua rejeitando item de outro usuário', async () => {
+    const owner = await user();
+    const other = await user();
+    const category = await prisma.category.create({ data: { name: 'Minha', user_id: owner.id } });
+    const item = await prisma.importedTransaction.create({ data: {
+      user_id: other.id, title: 'Privada', amount: 25, date: new Date('2026-11-04')
+    } });
+    const res = response();
+    await importedController.confirm({ userId: owner.id, params: { id: item.id }, body: {
+      category_id: category.id
+    } }, res, (err) => { throw err; });
+    assert.equal(res.statusCode, 404);
+    assert.deepEqual(res.body, { error: 'Item não encontrado ou acesso negado.' });
+    assert.ok(await prisma.importedTransaction.findUnique({ where: { id: item.id } }));
+    assert.equal(await prisma.transaction.count({ where: { user_id: owner.id } }), 0);
+  });
+
+  for (const replacement of ['própria', 'null']) {
+    test(`revisão explícita pode substituir categoria alheia salva por ${replacement}`, async () => {
+      const owner = await user();
+      const other = await user();
+      const foreignCategory = await prisma.category.create({ data: { name: 'Privada', user_id: other.id } });
+      const ownCategory = await prisma.category.create({ data: { name: 'Minha', user_id: owner.id } });
+      const item = await prisma.importedTransaction.create({ data: {
+        user_id: owner.id, title: 'Pendente', amount: 25, date: new Date('2026-11-04'),
+        category_id: foreignCategory.id
+      } });
+      const category_id = replacement === 'própria' ? ownCategory.id : null;
+      const res = response();
+      await importedController.confirm({ userId: owner.id, params: { id: item.id }, body: {
+        category_id
+      } }, res, (err) => { throw err; });
+      assert.equal(res.statusCode, 201);
+      const saved = await prisma.transaction.findUnique({ where: { id: res.body.id } });
+      assert.equal(saved.category_id, category_id);
+      assert.equal(saved.user_id, owner.id);
+      assert.equal(await prisma.importedTransaction.findUnique({ where: { id: item.id } }), null);
+    });
+  }
+
+  for (const flow of ['importação', 'recorrência']) {
+    test(`${flow}: formatos inválidos de categoria são rejeitados sem gravar`, async () => {
+      const owner = await user();
+      const item = await prisma.importedTransaction.create({ data: {
+        user_id: owner.id, title: 'Pendente', amount: 25, date: new Date('2026-11-04')
+      } });
+      for (const category_id of ['', 'não-é-uuid', [randomUUID()], { id: randomUUID() }]) {
+        let error;
+        const res = response();
+        const req = { userId: owner.id, params: { id: item.id }, body: {
+          title: 'Tentativa', amount: 10, type: 'EXPENSE', start_date: '2026-11-04', category_id
+        } };
+        if (flow === 'importação') {
+          await importedController.confirm(req, res, (err) => { error = err; });
+        } else {
+          await recurringController.create(req, res, (err) => { error = err; });
+        }
+        assert.ok(error instanceof require('zod').ZodError);
+        assert.equal(res.statusCode, null);
+      }
+      assert.equal(await prisma.transaction.count({ where: { user_id: owner.id } }), 0);
+      assert.equal(await prisma.recurringTransaction.count({ where: { user_id: owner.id } }), 0);
+      assert.ok(await prisma.importedTransaction.findUnique({ where: { id: item.id } }));
+    });
+  }
+
+  for (const installments_total of [undefined, 3]) {
+    const mode = installments_total ? 'parcelamento' : 'recorrência';
+    for (const categoryState of ['alheia', 'inexistente']) {
+      test(`${mode}: rejeita categoria ${categoryState} sem criar ocorrências`, async () => {
+        const owner = await user();
+        const other = await user();
+        const category = await prisma.category.create({ data: { name: 'Privada', user_id: other.id } });
+        const res = response();
+        await recurringController.create({ userId: owner.id, body: {
+          title: 'Tentativa', amount: 10, type: 'EXPENSE', start_date: '2026-11-04',
+          installments_total, user_id: other.id,
+          category_id: categoryState === 'alheia' ? category.id : randomUUID()
+        } }, res, (err) => { throw err; });
+        assert.equal(res.statusCode, 404);
+        assert.deepEqual(res.body, { error: 'Categoria não encontrada ou acesso negado.' });
+        assert.equal(await prisma.recurringTransaction.count({ where: { user_id: owner.id } }), 0);
+        assert.equal(await prisma.transaction.count({ where: { user_id: owner.id } }), 0);
+      });
+    }
+
+    for (const categoryState of ['própria', 'null', 'omitida']) {
+      test(`${mode}: permite categoria ${categoryState} e preserva ocorrências`, async () => {
+        const owner = await user();
+        const category = await prisma.category.create({ data: { name: 'Minha', user_id: owner.id } });
+        const categoryField = categoryState === 'própria' ? { category_id: category.id }
+          : categoryState === 'null' ? { category_id: null } : {};
+        const res = response();
+        await recurringController.create({ userId: owner.id, body: {
+          title: 'Conta', amount: 10, type: 'EXPENSE', start_date: '2026-11-04',
+          installments_total, ...categoryField
+        } }, res, (err) => { throw err; });
+        assert.equal(res.statusCode, 201);
+        const expectedCategory = categoryState === 'própria' ? category.id : null;
+        const recurring = await prisma.recurringTransaction.findUnique({ where: { id: res.body.id } });
+        assert.equal(recurring.category_id, expectedCategory);
+        assert.equal(recurring.installments_generated, installments_total || 1);
+        assert.equal(recurring.active, !installments_total);
+        const rows = await prisma.transaction.findMany({ where: { recurring_transaction_id: recurring.id } });
+        assert.equal(rows.length, installments_total || 1);
+        for (const row of rows) {
+          assert.equal(row.category_id, expectedCategory);
+          assert.equal(row.user_id, owner.id);
+          assert.equal(Number(row.amount), 10);
+        }
+      });
+    }
+  }
 
   test('consultas simultâneas não duplicam a mesma recorrência', async (t) => {
     freezeToday(t);

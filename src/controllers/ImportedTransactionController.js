@@ -84,6 +84,16 @@ module.exports = {
         category_id: overrides.category_id !== undefined ? overrides.category_id : item.category_id
       };
 
+      // Valida o resultado da revisão, inclusive a categoria já salva no item.
+      if (finalData.category_id != null) {
+        const category = await prisma.category.findFirst({
+          where: { id: finalData.category_id, user_id }
+        });
+        if (!category) {
+          return res.status(404).json({ error: 'Categoria não encontrada ou acesso negado.' });
+        }
+      }
+
       const [transaction] = await prisma.$transaction([
         prisma.transaction.create({
           data: { ...finalData, user_id }

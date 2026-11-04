@@ -114,7 +114,7 @@
       <header class="topbar">
         <div>
           <p class="topbar__eyebrow">Bem-vindo(a) de volta</p>
-          <h1 class="topbar__title" id="greetingName">Olá, Marina</h1>
+          <h1 class="topbar__title" id="greetingName">Olá</h1>
         </div>
         <button class="btn-gold" id="newTransactionBtn" type="button">
           + Nova transação
@@ -122,23 +122,24 @@
       </header>
 
       <!-- Cartões de resumo -->
-      <section class="summary-grid" aria-label="Resumo financeiro">
+      <section class="summary-grid" id="summarySection" aria-label="Resumo financeiro" aria-busy="true">
         <div class="summary-card summary-card--balance">
           <p class="summary-card__label">Saldo atual</p>
-          <p class="summary-card__value" id="summaryTotal">R$ 8.240,50</p>
-          <p class="summary-card__hint">Considerando todas as transações</p>
+          <p class="summary-card__value" id="summaryTotal">—</p>
+          <p class="summary-card__hint">Lançamentos até hoje</p>
+          <p class="summary-card__hint" id="summaryStatus" role="status" aria-live="polite">Carregando resumo financeiro…</p>
         </div>
 
         <div class="summary-card">
           <div class="summary-card__icon summary-card__icon--income" aria-hidden="true">↑</div>
           <p class="summary-card__label">Receitas este mês</p>
-          <p class="summary-card__value summary-card__value--income" id="summaryIncome">R$ 12.500,00</p>
+          <p class="summary-card__value summary-card__value--income" id="summaryIncome">—</p>
         </div>
 
         <div class="summary-card">
           <div class="summary-card__icon summary-card__icon--expense" aria-hidden="true">↓</div>
           <p class="summary-card__label">Despesas este mês</p>
-          <p class="summary-card__value summary-card__value--expense" id="summaryExpense">R$ 4.259,50</p>
+          <p class="summary-card__value summary-card__value--expense" id="summaryExpense">—</p>
         </div>
       </section>
 
@@ -206,61 +207,11 @@
               <th scope="col" class="align-right">Valor</th>
             </tr>
           </thead>
-          <tbody id="transactionsBody">
+          <tbody id="transactionsBody" aria-live="polite" aria-busy="true">
             <tr>
-              <td>
-                <div class="tx-desc">
-                  <span class="tx-dot tx-dot--income" aria-hidden="true"></span>
-                  Salário — Setembro
-                </div>
+              <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
+                Carregando transações…
               </td>
-              <td><span class="tag">Salário</span></td>
-              <td>01/09/2026</td>
-              <td class="align-right tx-amount tx-amount--income">+ R$ 6.500,00</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tx-desc">
-                  <span class="tx-dot tx-dot--expense" aria-hidden="true"></span>
-                  Supermercado Extra
-                </div>
-              </td>
-              <td><span class="tag">Alimentação</span></td>
-              <td>29/08/2026</td>
-              <td class="align-right tx-amount tx-amount--expense">− R$ 384,20</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tx-desc">
-                  <span class="tx-dot tx-dot--expense" aria-hidden="true"></span>
-                  Assinatura streaming
-                </div>
-              </td>
-              <td><span class="tag">Assinaturas</span></td>
-              <td>27/08/2026</td>
-              <td class="align-right tx-amount tx-amount--expense">− R$ 39,90</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tx-desc">
-                  <span class="tx-dot tx-dot--income" aria-hidden="true"></span>
-                  Freelance — projeto Acme
-                </div>
-              </td>
-              <td><span class="tag">Freelance</span></td>
-              <td>24/08/2026</td>
-              <td class="align-right tx-amount tx-amount--income">+ R$ 2.200,00</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tx-desc">
-                  <span class="tx-dot tx-dot--expense" aria-hidden="true"></span>
-                  Uber
-                </div>
-              </td>
-              <td><span class="tag">Transporte</span></td>
-              <td>23/08/2026</td>
-              <td class="align-right tx-amount tx-amount--expense">− R$ 27,80</td>
             </tr>
           </tbody>
         </table>

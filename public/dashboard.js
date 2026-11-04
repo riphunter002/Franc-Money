@@ -379,24 +379,64 @@ function initPeriodTabs() {
    Chamada tanto ao carregar a página quanto após criar uma nova
    transação, para que tudo fique sincronizado sem precisar de F5.
    ---------------------------------------------------------- */
-async function refreshAll(token) {
+function renderSummaryState(message) {
+  ['summaryTotal', 'summaryIncome', 'summaryExpense'].forEach((id) => {
+    document.getElementById(id).textContent = '—';
+  });
+  const status = document.getElementById('summaryStatus');
+  status.hidden = false;
+  status.textContent = message;
+}
+
+function renderTransactionsState(message) {
+  document.getElementById('transactionsBody').innerHTML = `
+    <tr>
+      <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
+        ${escapeHtml(message)}
+      </td>
+    </tr>
+  `;
+}
+
+async function refreshSummary(token) {
+  const section = document.getElementById('summarySection');
+  section.setAttribute('aria-busy', 'true');
+  renderSummaryState('Carregando resumo financeiro…');
+
   try {
-    const [summaryResponse, recentResponse] = await Promise.all([
-      fetchWithAuth("/summary", token),
-      fetchWithAuth("/transactions?limit=5", token),
-    ]);
-
-    if (summaryResponse.ok) {
-      renderSummary(await summaryResponse.json());
-    }
-
-    if (recentResponse.ok) {
-      const { data } = await recentResponse.json();
-      renderTransactions(data || []);
-    }
+    const response = await fetchWithAuth('/summary', token);
+    if (!response.ok) throw new Error('Falha ao consultar o resumo.');
+    renderSummary(await response.json());
+    const status = document.getElementById('summaryStatus');
+    status.textContent = '';
+    status.hidden = true;
   } catch (err) {
-    console.error("Erro ao carregar resumo/transações recentes:", err);
+    renderSummaryState('Não foi possível carregar o resumo. Recarregue a página para tentar novamente.');
+  } finally {
+    section.setAttribute('aria-busy', 'false');
   }
+}
+
+async function refreshRecentTransactions(token) {
+  const tbody = document.getElementById('transactionsBody');
+  tbody.setAttribute('aria-busy', 'true');
+  renderTransactionsState('Carregando transações…');
+
+  try {
+    const response = await fetchWithAuth('/transactions?limit=5', token);
+    if (!response.ok) throw new Error('Falha ao consultar as transações recentes.');
+    const { data } = await response.json();
+    renderTransactions(data || []);
+  } catch (err) {
+    renderTransactionsState('Não foi possível carregar as transações recentes. Recarregue a página para tentar novamente.');
+  } finally {
+    tbody.setAttribute('aria-busy', 'false');
+  }
+}
+
+async function refreshAll(token) {
+  // Cada região conclui a própria consulta, mesmo se a outra falhar.
+  await Promise.all([refreshSummary(token), refreshRecentTransactions(token)]);
 
   try {
     cachedTransactions = await fetchAllTransactions(token);

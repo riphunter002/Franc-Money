@@ -74,6 +74,12 @@ routes.post('/transactions', TransactionController.create);
  *           format: date
  *         description: Data final (YYYY-MM-DD)
  *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *           maxLength: 120
+ *         description: Busca por trecho no título ou na descrição
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer

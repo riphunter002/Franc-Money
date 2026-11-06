@@ -12,15 +12,19 @@ let currentPage = 1;
 let currentMeta = null;
 let currentTransactions = [];
 let cachedToken = null;
+let activeSearch = "";
+let latestRequest = 0;
 
 /* ----------------------------------------------------------
    Renderização da tabela
    ---------------------------------------------------------- */
 function renderTransactionsTable(transactions) {
   const tbody = document.getElementById("transactionsBody");
+  const mobileList = document.getElementById("mobileTransactions");
   if (!tbody) return;
 
   if (!transactions.length) {
+    mobileList.textContent = "Nenhuma movimentação encontrada.";
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
@@ -31,6 +35,8 @@ function renderTransactionsTable(transactions) {
     return;
   }
 
+  const mobileRows = [];
+  let previousDay;
   tbody.innerHTML = transactions
     .map((tx) => {
       const isIncome = tx.type === "INCOME";
@@ -54,6 +60,33 @@ function renderTransactionsTable(transactions) {
         tx.recurring_transaction_id && !tx.installment_number
           ? `<button type="button" class="row-actions__btn" data-action="cancel-recurrence" data-recurring-id="${tx.recurring_transaction_id}">Cancelar recorrência</button>`
           : "";
+      const actions = `
+        ${cancelRecurrenceBtn}
+        <button type="button" class="row-actions__btn" data-action="edit" data-id="${tx.id}">Editar</button>
+        <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${tx.id}">Excluir</button>
+      `;
+      const amountClass = isIncome ? "tx-amount--income" : "tx-amount--expense";
+      if (dateLabel !== previousDay) {
+        mobileRows.push(`<h2 class="mobile-transaction-day">${dateLabel}</h2>`);
+        previousDay = dateLabel;
+      }
+      mobileRows.push(`
+        <details class="mobile-transaction">
+          <summary>
+            <span class="mobile-transaction__name">
+              <strong>${escapeHtml(tx.title)}</strong>
+              <small>${escapeHtml(categoryName)}</small>
+            </span>
+            <span class="tx-amount ${amountClass}">${sign} ${amount}</span>
+            <span class="mobile-transaction__chevron" aria-hidden="true">›</span>
+          </summary>
+          <div class="mobile-transaction__details">
+            ${recurrenceBadge}
+            ${tx.description ? `<p>${escapeHtml(tx.description)}</p>` : ""}
+            <div class="row-actions">${actions}</div>
+          </div>
+        </details>
+      `);
 
       return `
         <tr>
@@ -66,20 +99,17 @@ function renderTransactionsTable(transactions) {
           </td>
           <td><span class="tag">${escapeHtml(categoryName)}</span></td>
           <td>${dateLabel}</td>
-          <td class="align-right tx-amount ${isIncome ? "tx-amount--income" : "tx-amount--expense"}">
+          <td class="align-right tx-amount ${amountClass}">
             ${sign} ${amount}
           </td>
           <td>
-            <div class="row-actions">
-              ${cancelRecurrenceBtn}
-              <button type="button" class="row-actions__btn" data-action="edit" data-id="${tx.id}">Editar</button>
-              <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${tx.id}">Excluir</button>
-            </div>
+            <div class="row-actions">${actions}</div>
           </td>
         </tr>
       `;
     })
     .join("");
+  mobileList.innerHTML = mobileRows.join("");
 }
 
 function renderPagination(meta) {
@@ -108,6 +138,7 @@ function getActiveFilters() {
   if (type) params.set("type", type);
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
+  if (activeSearch) params.set("search", activeSearch);
 
   return params.toString();
 }
@@ -116,19 +147,38 @@ function getActiveFilters() {
    Busca a página atual de transações, com os filtros ativos
    ---------------------------------------------------------- */
 async function loadTransactions(token) {
+  const request = ++latestRequest;
+  const results = document.getElementById("transactionResults");
+  const status = document.getElementById("transactionStatus");
+  results.setAttribute("aria-busy", "true");
+  status.textContent = "Carregando movimentações…";
   try {
     const query = getActiveFilters();
     const response = await fetchWithAuth(`/transactions?${query}`, token);
-    if (!response.ok) return;
+    if (request !== latestRequest) return;
+    if (!response.ok) throw new Error("Não foi possível consultar as movimentações.");
 
     const { data, meta } = await response.json();
+    if (request !== latestRequest) return;
     currentTransactions = data || [];
     currentMeta = meta;
 
     renderTransactionsTable(currentTransactions);
     renderPagination(meta);
+    status.textContent = "";
   } catch (err) {
+    if (request !== latestRequest) return;
+    currentTransactions = [];
+    currentMeta = null;
+    document.getElementById("transactionsBody").replaceChildren();
+    document.getElementById("mobileTransactions").replaceChildren();
+    document.getElementById("prevPageBtn").disabled = true;
+    document.getElementById("nextPageBtn").disabled = true;
+    document.getElementById("paginationInfo").textContent = "Histórico indisponível";
+    status.textContent = "Não foi possível carregar as movimentações. Tente buscar novamente.";
     console.error("Erro ao carregar transações:", err);
+  } finally {
+    if (request === latestRequest) results.setAttribute("aria-busy", "false");
   }
 }
 
@@ -183,20 +233,24 @@ function setSubmitting(isSubmitting, isEditing) {
   }
 }
 
-async function populateCategories(token, selectedId = "") {
-  categorySelect.innerHTML = '<option value="">Sem categoria</option>';
+let categoryRequest = 0;
+
+async function populateCategories(token, transaction) {
+  const request = ++categoryRequest;
+  const selectedId = transaction?.category_id || "";
+  categorySelect.replaceChildren(new Option("Sem categoria", ""));
+  if (selectedId) {
+    categorySelect.add(new Option(transaction.category?.name || "Categoria atual", selectedId, true, true));
+  }
 
   try {
     const response = await fetchWithAuth("/categories", token);
     if (!response.ok) return;
 
     const categories = await response.json();
+    if (request !== categoryRequest || overlay.hidden) return;
     categories.forEach((category) => {
-      const option = document.createElement("option");
-      option.value = category.id;
-      option.textContent = category.name;
-      if (category.id === selectedId) option.selected = true;
-      categorySelect.appendChild(option);
+      if (category.id !== selectedId) categorySelect.add(new Option(category.name, category.id));
     });
   } catch (err) {
     console.error("Erro ao carregar categorias:", err);
@@ -217,8 +271,10 @@ async function openModal(transaction = null) {
   setFormError("");
 
   const isEditing = Boolean(transaction);
+  const mobile = layoutTransactionSheet(overlay);
+  document.getElementById("transactionOptions").open = !mobile || isEditing;
   idInput.value = isEditing ? transaction.id : "";
-  modalTitle.textContent = isEditing ? "Editar transação" : "Nova transação";
+  modalTitle.textContent = isEditing ? "Editar transação" : mobile ? "Novo lançamento" : "Nova transação";
   setSubmitting(false, isEditing);
 
   if (isEditing) {
@@ -230,6 +286,7 @@ async function openModal(transaction = null) {
     if (typeRadio) typeRadio.checked = true;
   } else {
     dateInput.value = todayLocalDateString();
+    if (mobile) form.querySelector('input[name="txType"][value="EXPENSE"]').checked = true;
   }
 
   // Recorrência só se decide na criação: uma transação já existente não tem
@@ -240,10 +297,10 @@ async function openModal(transaction = null) {
   installmentsInput.value = "";
 
   overlay.hidden = false;
+  (mobile ? closeBtn : titleInput).focus();
   document.addEventListener("keydown", handleKeydown);
 
-  await populateCategories(auth.token, isEditing ? transaction.category_id || "" : "");
-  titleInput.focus();
+  await populateCategories(auth.token, transaction);
 }
 
 function closeModal() {
@@ -254,6 +311,7 @@ function closeModal() {
 
 function handleKeydown(event) {
   if (event.key === "Escape") closeModal();
+  keepDialogFocus(event, overlay);
 }
 
 closeBtn.addEventListener("click", closeModal);
@@ -300,6 +358,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (!date) {
+    document.getElementById("transactionOptions").open = true;
     setFormError("Informe a data da transação.");
     dateInput.focus();
     return;
@@ -310,6 +369,7 @@ form.addEventListener("submit", async (event) => {
   const installmentsTotal = Number(installmentsInput.value);
 
   if (recurrenceType === "INSTALLMENT" && (!installmentsTotal || installmentsTotal < 2)) {
+    document.getElementById("transactionOptions").open = true;
     setFormError("Informe pelo menos 2 parcelas.");
     installmentsInput.focus();
     return;
@@ -433,7 +493,7 @@ async function handleCancelRecurrence(recurringId, token) {
 // Delegação de eventos: um único listener no <tbody> cobre todos os
 // botões "Editar"/"Excluir"/"Cancelar recorrência", mesmo depois que as
 // linhas são recriadas
-document.getElementById("transactionsBody").addEventListener("click", (event) => {
+document.getElementById("transactionResults").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
 
@@ -470,6 +530,29 @@ function initTransactionsPage() {
   });
 
   document.getElementById("newTransactionBtn").addEventListener("click", () => openModal(null));
+
+  const search = document.getElementById("transactionSearch");
+  document.getElementById("mobileSearchForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    activeSearch = search.value.trim();
+    currentPage = 1;
+    loadTransactions(auth.token);
+  });
+  window.matchMedia("(max-width: 600px)").addEventListener("change", (event) => {
+    if (!event.matches && activeSearch) {
+      activeSearch = "";
+      search.value = "";
+      currentPage = 1;
+      loadTransactions(auth.token);
+    }
+  });
+
+  const filtersButton = document.getElementById("mobileFiltersBtn");
+  filtersButton.addEventListener("click", () => {
+    const filters = document.getElementById("transactionFilters");
+    const expanded = filters.classList.toggle("is-expanded");
+    filtersButton.setAttribute("aria-expanded", String(expanded));
+  });
 
   document.getElementById("filtersForm").addEventListener("submit", (event) => {
     event.preventDefault();

@@ -128,23 +128,58 @@ function initMobileSidebar() {
   const backdrop = document.getElementById("sidebarBackdrop");
   if (!toggleBtn || !sidebar || !backdrop) return;
 
+  const nav = document.createElement("nav");
+  nav.className = "mobile-nav";
+  nav.setAttribute("aria-label", "Navegação rápida");
+  for (const [href, label] of [
+    ["dashboard.html", "Hoje"],
+    ["transactions.html", "Movimentações"],
+    ["accounts.html", "Contas"]
+  ]) {
+    const link = sidebar.querySelector(`a[href="${href}"]`).cloneNode(true);
+    link.className = "mobile-nav__item";
+    link.querySelector("span").textContent = label;
+    nav.append(link);
+  }
+  const more = document.createElement("button");
+  more.type = "button";
+  more.className = "mobile-nav__item";
+  more.setAttribute("aria-controls", sidebar.id);
+  more.setAttribute("aria-expanded", "false");
+  if (!nav.querySelector('[aria-current="page"]')) more.classList.add("is-current");
+  more.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg><span>Mais</span>';
+  nav.append(more);
+  document.querySelector(".app-shell").append(nav);
+  document.body.classList.add("has-mobile-nav");
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "sidebar__close btn-secondary";
+  closeBtn.textContent = "Fechar menu";
+  sidebar.querySelector(".sidebar__brand").after(closeBtn);
+
+  let opener;
   function openSidebar() {
+    opener = document.activeElement;
     sidebar.classList.add("is-open");
     backdrop.hidden = false;
     toggleBtn.setAttribute("aria-expanded", "true");
+    more.setAttribute("aria-expanded", "true");
+    closeBtn.focus();
   }
 
   function closeSidebar() {
+    if (!sidebar.classList.contains("is-open")) return;
     sidebar.classList.remove("is-open");
     backdrop.hidden = true;
     toggleBtn.setAttribute("aria-expanded", "false");
+    more.setAttribute("aria-expanded", "false");
+    opener?.focus();
   }
 
-  toggleBtn.addEventListener("click", () => {
-    if (sidebar.classList.contains("is-open")) closeSidebar();
-    else openSidebar();
-  });
-
+  toggleBtn.addEventListener("click", openSidebar);
+  more.addEventListener("click", openSidebar);
+  closeBtn.addEventListener("click", closeSidebar);
   backdrop.addEventListener("click", closeSidebar);
 
   // Fecha ao tocar num item do menu — a navegação já troca de página,
@@ -154,8 +189,46 @@ function initMobileSidebar() {
   });
 
   document.addEventListener("keydown", (event) => {
+    if (!sidebar.classList.contains("is-open")) return;
     if (event.key === "Escape") closeSidebar();
+    keepDialogFocus(event, sidebar);
   });
+  window.matchMedia("(max-width: 860px)").addEventListener("change", closeSidebar);
+  window.matchMedia("(max-width: 600px)").addEventListener("change", () => {
+    closeSidebar();
+    const sheet = document.querySelector(".transaction-sheet:not([hidden])");
+    if (sheet) layoutTransactionSheet(sheet);
+  });
+}
+
+function layoutTransactionSheet(overlay) {
+  const mobile = overlay.classList.contains("transaction-sheet") &&
+    window.matchMedia("(max-width: 600px)").matches;
+  const options = overlay.querySelector(".transaction-options");
+  if (!options) return mobile;
+  const title = overlay.querySelector("#txTitle").closest(".modal-field");
+  const amount = overlay.querySelector("#txAmount").closest(".modal-field");
+  if (mobile && title.nextElementSibling === amount) title.before(amount);
+  if (!mobile && amount.nextElementSibling === title) amount.before(title);
+  if (!mobile) options.open = true;
+  return mobile;
+}
+
+function keepDialogFocus(event, container) {
+  if (event.key !== "Tab") return;
+  const controls = Array.from(container.querySelectorAll(
+    'a[href], button, input, select, textarea, summary'
+  )).filter((control) => !control.disabled && control.getClientRects().length > 0);
+  const first = controls[0];
+  const last = controls.at(-1);
+  const active = document.activeElement;
+  if (event.shiftKey && (active === first || !controls.includes(active))) {
+    event.preventDefault();
+    last?.focus();
+  } else if (!event.shiftKey && (active === last || !controls.includes(active))) {
+    event.preventDefault();
+    first?.focus();
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initMobileSidebar);

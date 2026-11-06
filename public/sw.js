@@ -7,13 +7,13 @@
 //
 // Ao mudar CSS/JS, é preciso subir o número da versão abaixo pra invalidar
 // o cache antigo (senão o navegador continuaria servindo o arquivo velho).
-const CACHE_NAME = 'franc-money-v5';
+const CACHE_NAME = 'franc-money-v8';
 
 const PRECACHE_URLS = [
-  '/dashboard.css',
+  '/dashboard.css?v=8',
   '/style.css',
   '/register.css',
-  '/session.js',
+  '/session.js?v=8',
   '/theme.js',
   '/favicon.png',
   '/manifest.json',
@@ -22,7 +22,9 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) =>
+    cache.addAll(PRECACHE_URLS.map((url) => new Request(url, { cache: 'reload' })))
+  ));
   self.skipWaiting();
 });
 
@@ -37,12 +39,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  const isPrecached = PRECACHE_URLS.includes(url.pathname);
+  const isPrecached = PRECACHE_URLS.includes(url.pathname + url.search);
   if (event.request.method !== 'GET' || !isPrecached) {
     return; // deixa o navegador tratar normalmente (rede)
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.match(event.request))
+      .then((cached) => cached || fetch(event.request))
   );
 });

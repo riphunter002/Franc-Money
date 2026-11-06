@@ -447,6 +447,27 @@ if (!connectionString) {
     assert.equal(await prisma.transaction.count({ where: { user_id: owner.id } }), 5);
   });
 
+  test('busca no histórico combina texto, tipo, data, usuário e paginação', async () => {
+    const owner = await user();
+    const other = await user();
+    const base = { user_id: owner.id, amount: 20, type: 'EXPENSE', date: new Date('2026-11-05') };
+    await prisma.transaction.createMany({ data: [
+      { ...base, title: 'Mercado' },
+      { ...base, title: 'Compras', description: 'Entrega do mercado', date: new Date('2026-11-04') },
+      { ...base, title: 'Farmácia' },
+      { ...base, title: 'Mercado antigo', date: new Date('2026-10-01') },
+      { ...base, title: 'Mercado receita', type: 'INCOME' },
+      { ...base, title: 'Mercado de outra pessoa', user_id: other.id }
+    ] });
+    const res = response();
+    await transactions.listByUser({
+      userId: owner.id,
+      query: { search: ' MERCADO ', type: 'EXPENSE', startDate: '2026-11-01', page: 2, limit: 1 }
+    }, res, (err) => { throw err; });
+    assert.equal(res.body.meta.total, 2);
+    assert.deepEqual(res.body.data.map((tx) => tx.title), ['Compras']);
+  });
+
   test('resumo e lista simultâneos do dashboard não duplicam recorrências', async (t) => {
     freezeToday(t);
     const owner = await user();

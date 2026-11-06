@@ -673,15 +673,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     lastFocusedElement = document.activeElement;
     form.reset();
+    const mobile = layoutTransactionSheet(overlay);
+    document.getElementById("txModalTitle").textContent = mobile ? "Novo lançamento" : "Nova transação";
+    const options = document.getElementById("transactionOptions");
+    if (options) options.open = !mobile;
+    if (mobile) form.querySelector('input[name="txType"][value="EXPENSE"]').checked = true;
     setFormError("");
     recurrenceTypeSelect.value = "";
     installmentsField.hidden = true;
 
     overlay.hidden = false;
+    (mobile ? closeBtn : titleInput).focus();
     document.addEventListener("keydown", handleKeydown);
 
     await populateCategories(auth.token);
-    titleInput.focus();
   }
 
   function closeModal() {
@@ -692,9 +697,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleKeydown(event) {
     if (event.key === "Escape") closeModal();
+    keepDialogFocus(event, overlay);
   }
 
   openBtn.addEventListener("click", openModal);
+  document.getElementById("mobileNewTransactionBtn")?.addEventListener("click", openModal);
   closeBtn.addEventListener("click", closeModal);
   cancelBtn.addEventListener("click", closeModal);
 
@@ -742,6 +749,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const installmentsTotal = Number(installmentsInput.value);
 
     if (recurrenceType === "INSTALLMENT" && (!installmentsTotal || installmentsTotal < 2)) {
+      const options = document.getElementById("transactionOptions");
+      if (options) options.open = true;
       setFormError("Informe pelo menos 2 parcelas.");
       installmentsInput.focus();
       return;

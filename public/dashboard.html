@@ -13,7 +13,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="dashboard.css?v=8" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -75,7 +75,7 @@
 
     <main class="main dashboard-home" id="mainContent">
       <header class="topbar home-topbar">
-        <div><p class="topbar__eyebrow" id="greetingName">SEU COTIDIANO</p><h1 class="topbar__title">Seu dinheiro, com clareza.</h1></div>
+        <div><p class="topbar__eyebrow" id="greetingName">SEU COTIDIANO</p><h1 class="topbar__title"><span class="home-title-desktop">Seu dinheiro, com clareza.</span><span class="home-title-mobile">Hoje</span></h1></div>
         <div class="home-actions"><span class="month-label" id="currentMonthLabel"></span><button class="btn-gold" id="newTransactionBtn" type="button"><span aria-hidden="true">＋</span> Novo lançamento</button></div>
       </header>
       <section class="summary-grid" id="summarySection" aria-label="Resumo financeiro" aria-busy="true">
@@ -84,6 +84,7 @@
         <div class="summary-card"><div class="summary-card__icon summary-card__icon--expense" aria-hidden="true">↘</div><p class="summary-card__label">Saídas no mês</p><p class="summary-card__value" id="summaryExpense">—</p></div>
       </section>
       <a class="review-notice" href="import.html" id="reviewNotice" aria-label="Abrir revisão de importações"><span class="review-notice__icon" aria-hidden="true"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg></span><span id="reviewNoticeText" role="status" aria-live="polite">Consultando movimentações para revisar…</span><span aria-hidden="true">›</span></a>
+      <button class="btn-gold home-launch-mobile" id="mobileNewTransactionBtn" type="button">＋ Novo lançamento</button>
       <div class="home-grid">
         <section class="home-section home-section--accounts" aria-labelledby="accountsHeading"><div class="panel__header"><h2 class="panel__title" id="accountsHeading">Suas contas</h2><a class="link" href="accounts.html">Ver contas →</a></div><div class="bank-empty"><span class="empty-state__icon" aria-hidden="true"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg></span><div><h3>Seu banco, mais perto.</h3><p>A integração bancária está em preparação. Seus saldos aparecerão aqui quando ela estiver disponível.</p><a class="link" href="accounts.html">Entenda a conexão →</a></div></div></section>
         <section class="home-section" aria-labelledby="upcomingHeading"><div class="panel__header"><h2 class="panel__title" id="upcomingHeading">Próximos 7 dias</h2></div><p class="section-note">Despesas cadastradas, a partir de amanhã.</p><ul class="upcoming-list" id="upcomingList" aria-live="polite" aria-busy="true"><li class="manage-list__empty">Carregando próximos lançamentos…</li></ul></section>
@@ -94,7 +95,7 @@
     </main>
 
     <!-- ===================== MODAL: NOVA TRANSAÇÃO ===================== -->
-    <div class="modal-overlay" id="txModalOverlay" hidden>
+    <div class="modal-overlay transaction-sheet" id="txModalOverlay" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="txModalTitle">
         <div class="modal__header">
           <h2 id="txModalTitle" class="modal__title">Nova transação</h2>
@@ -118,18 +119,6 @@
           </fieldset>
 
           <div class="modal-field">
-            <label for="txTitle" class="modal-label">Título</label>
-            <input
-              id="txTitle"
-              name="title"
-              type="text"
-              class="modal-input"
-              placeholder="Ex.: Salário, Supermercado..."
-              required
-            />
-          </div>
-
-          <div class="modal-field">
             <label for="txAmount" class="modal-label">Valor (R$)</label>
             <input
               id="txAmount"
@@ -145,44 +134,61 @@
           </div>
 
           <div class="modal-field">
+            <label for="txTitle" class="modal-label">Título</label>
+            <input
+              id="txTitle"
+              name="title"
+              type="text"
+              class="modal-input"
+              placeholder="Ex.: Salário, Supermercado..."
+              required
+            />
+          </div>
+
+          <div class="modal-field">
             <label for="txCategory" class="modal-label">Categoria (opcional)</label>
             <select id="txCategory" name="category_id" class="modal-input">
               <option value="">Sem categoria</option>
             </select>
           </div>
 
-          <div class="modal-field" id="txRecurrenceField">
-            <label for="txRecurrenceType" class="modal-label">Recorrência (opcional)</label>
-            <select id="txRecurrenceType" name="recurrenceType" class="modal-input">
-              <option value="">Não repete</option>
-              <option value="RECURRING">Recorrente (todo mês, sem data pra parar)</option>
-              <option value="INSTALLMENT">Parcelada (número fixo de vezes)</option>
-            </select>
-          </div>
+          <details class="transaction-options" id="transactionOptions" open>
+            <summary>Mais opções</summary>
+            <div class="transaction-options__fields">
+              <div class="modal-field" id="txRecurrenceField">
+                <label for="txRecurrenceType" class="modal-label">Recorrência (opcional)</label>
+                <select id="txRecurrenceType" name="recurrenceType" class="modal-input">
+                  <option value="">Não repete</option>
+                  <option value="RECURRING">Recorrente (todo mês, sem data pra parar)</option>
+                  <option value="INSTALLMENT">Parcelada (número fixo de vezes)</option>
+                </select>
+              </div>
 
-          <div class="modal-field" id="txInstallmentsField" hidden>
-            <label for="txInstallmentsTotal" class="modal-label">Número de parcelas</label>
-            <input
-              id="txInstallmentsTotal"
-              name="installments_total"
-              type="number"
-              class="modal-input"
-              placeholder="Ex.: 6"
-              min="2"
-              step="1"
-            />
-          </div>
+              <div class="modal-field" id="txInstallmentsField" hidden>
+                <label for="txInstallmentsTotal" class="modal-label">Número de parcelas</label>
+                <input
+                  id="txInstallmentsTotal"
+                  name="installments_total"
+                  type="number"
+                  class="modal-input"
+                  placeholder="Ex.: 6"
+                  min="2"
+                  step="1"
+                />
+              </div>
 
-          <div class="modal-field">
-            <label for="txDescription" class="modal-label">Descrição (opcional)</label>
-            <textarea
-              id="txDescription"
-              name="description"
-              class="modal-input modal-textarea"
-              rows="2"
-              placeholder="Detalhes adicionais"
-            ></textarea>
-          </div>
+              <div class="modal-field">
+                <label for="txDescription" class="modal-label">Descrição (opcional)</label>
+                <textarea
+                  id="txDescription"
+                  name="description"
+                  class="modal-input modal-textarea"
+                  rows="2"
+                  placeholder="Detalhes adicionais"
+                ></textarea>
+              </div>
+            </div>
+          </details>
 
           <p class="modal-error" id="txFormError" role="alert"></p>
 
@@ -197,7 +203,7 @@
   </div>
 
   <script src="pwa.js"></script>
-  <script src="session.js"></script>
+  <script src="session.js?v=8"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="dashboard.css?v=8" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -85,8 +85,19 @@
         </button>
       </header>
 
+      <div class="mobile-search">
+        <form id="mobileSearchForm" role="search">
+          <label class="sr-only" for="transactionSearch">Buscar por título ou descrição</label>
+          <input class="modal-input" id="transactionSearch" type="search" maxlength="120" placeholder="Buscar movimentação" enterkeyhint="search" />
+          <button type="submit" class="btn-secondary" aria-label="Buscar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="5.5"/><path d="m14 14 5 5"/></svg>
+          </button>
+        </form>
+        <button id="mobileFiltersBtn" class="btn-secondary" type="button" aria-controls="transactionFilters" aria-expanded="false">Filtros</button>
+      </div>
+
       <!-- Filtros -->
-      <section class="panel panel--filters">
+      <section class="panel panel--filters" id="transactionFilters">
         <form id="filtersForm" class="filters-form">
           <div class="modal-field filters-form__field">
             <label for="filterType" class="modal-label">Tipo</label>
@@ -115,8 +126,8 @@
       </section>
 
       <!-- Tabela -->
-      <section class="panel panel--transactions">
-        <div class="table-scroll">
+      <section class="panel panel--transactions" id="transactionResults">
+        <div class="table-scroll transaction-table-desktop">
           <table class="transactions-table">
             <thead>
               <tr>
@@ -133,6 +144,8 @@
           </table>
         </div>
 
+        <div class="mobile-transaction-list" id="mobileTransactions"></div>
+        <p class="transaction-status" id="transactionStatus" role="status">Carregando movimentações…</p>
         <div class="pagination" id="pagination">
           <button type="button" class="pagination__btn" id="prevPageBtn">← Anterior</button>
           <span class="pagination__info" id="paginationInfo">Página 1 de 1</span>
@@ -143,7 +156,7 @@
     </main>
 
     <!-- ===================== MODAL: NOVA/EDITAR TRANSAÇÃO ===================== -->
-    <div class="modal-overlay" id="txModalOverlay" hidden>
+    <div class="modal-overlay transaction-sheet" id="txModalOverlay" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="txModalTitle">
         <div class="modal__header">
           <h2 id="txModalTitle" class="modal__title">Nova transação</h2>
@@ -168,18 +181,6 @@
           </fieldset>
 
           <div class="modal-field">
-            <label for="txTitle" class="modal-label">Título</label>
-            <input
-              id="txTitle"
-              name="title"
-              type="text"
-              class="modal-input"
-              placeholder="Ex.: Salário, Supermercado..."
-              required
-            />
-          </div>
-
-          <div class="modal-field">
             <label for="txAmount" class="modal-label">Valor (R$)</label>
             <input
               id="txAmount"
@@ -195,29 +196,14 @@
           </div>
 
           <div class="modal-field">
-            <label for="txDate" class="modal-label">Data</label>
-            <input id="txDate" name="date" type="date" class="modal-input" required />
-          </div>
-
-          <div class="modal-field" id="txRecurrenceField">
-            <label for="txRecurrenceType" class="modal-label">Recorrência (opcional)</label>
-            <select id="txRecurrenceType" name="recurrenceType" class="modal-input">
-              <option value="">Não repete</option>
-              <option value="RECURRING">Recorrente (todo mês, sem data pra parar)</option>
-              <option value="INSTALLMENT">Parcelada (número fixo de vezes)</option>
-            </select>
-          </div>
-
-          <div class="modal-field" id="txInstallmentsField" hidden>
-            <label for="txInstallmentsTotal" class="modal-label">Número de parcelas</label>
+            <label for="txTitle" class="modal-label">Título</label>
             <input
-              id="txInstallmentsTotal"
-              name="installments_total"
-              type="number"
+              id="txTitle"
+              name="title"
+              type="text"
               class="modal-input"
-              placeholder="Ex.: 6"
-              min="2"
-              step="1"
+              placeholder="Ex.: Salário, Supermercado..."
+              required
             />
           </div>
 
@@ -228,16 +214,48 @@
             </select>
           </div>
 
-          <div class="modal-field">
-            <label for="txDescription" class="modal-label">Descrição (opcional)</label>
-            <textarea
-              id="txDescription"
-              name="description"
-              class="modal-input modal-textarea"
-              rows="2"
-              placeholder="Detalhes adicionais"
-            ></textarea>
-          </div>
+          <details class="transaction-options" id="transactionOptions" open>
+            <summary>Mais opções</summary>
+            <div class="transaction-options__fields">
+              <div class="modal-field">
+                <label for="txDate" class="modal-label">Data</label>
+                <input id="txDate" name="date" type="date" class="modal-input" required />
+              </div>
+
+              <div class="modal-field" id="txRecurrenceField">
+                <label for="txRecurrenceType" class="modal-label">Recorrência (opcional)</label>
+                <select id="txRecurrenceType" name="recurrenceType" class="modal-input">
+                  <option value="">Não repete</option>
+                  <option value="RECURRING">Recorrente (todo mês, sem data pra parar)</option>
+                  <option value="INSTALLMENT">Parcelada (número fixo de vezes)</option>
+                </select>
+              </div>
+
+              <div class="modal-field" id="txInstallmentsField" hidden>
+                <label for="txInstallmentsTotal" class="modal-label">Número de parcelas</label>
+                <input
+                  id="txInstallmentsTotal"
+                  name="installments_total"
+                  type="number"
+                  class="modal-input"
+                  placeholder="Ex.: 6"
+                  min="2"
+                  step="1"
+                />
+              </div>
+
+              <div class="modal-field">
+                <label for="txDescription" class="modal-label">Descrição (opcional)</label>
+                <textarea
+                  id="txDescription"
+                  name="description"
+                  class="modal-input modal-textarea"
+                  rows="2"
+                  placeholder="Detalhes adicionais"
+                ></textarea>
+              </div>
+            </div>
+          </details>
 
           <p class="modal-error" id="txFormError" role="alert"></p>
 
@@ -252,7 +270,7 @@
   </div>
 
   <script src="pwa.js"></script>
-  <script src="session.js"></script>
+  <script src="session.js?v=8"></script>
   <script src="transactions.js"></script>
 </body>
 </html>

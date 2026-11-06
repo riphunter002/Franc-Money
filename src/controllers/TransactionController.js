@@ -56,11 +56,19 @@ module.exports = {
       await generateDueRecurringTransactions(prisma, userId);
 
       // Captura page e limit da URL (padrão: página 1, 10 itens)
-      const { type, startDate, endDate, page = 1, limit = 10 } = req.query;
+      const { type, startDate, endDate, search, page = 1, limit = 10 } = req.query;
 
       const filters = { user_id: userId };
 
       if (type) filters.type = type;
+      if (typeof search === 'string' && search.trim()) {
+        // O texto digitado é literal, inclusive caracteres especiais do LIKE.
+        const contains = search.trim().slice(0, 120).replace(/[\\%_]/g, '\\$&');
+        filters.OR = [
+          { title: { contains, mode: 'insensitive' } },
+          { description: { contains, mode: 'insensitive' } }
+        ];
+      }
       if (startDate || endDate) {
         filters.date = {};
         if (startDate) filters.date.gte = new Date(startDate);

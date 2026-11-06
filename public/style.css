@@ -481,3 +481,22 @@ body {
     transition: none;
   }
 }
+/* Tema claro compartilha a identidade Cotidiano das telas internas. */
+:root[data-theme="light"] {
+  --bg-base: #f6f5f1; --bg-panel: #ffffff; --bg-panel-solid: #fcfbf8;
+  --grid-line: #e5e2db; --gold: #996b1b; --gold-light: #8b6119;
+  --gold-dim: #b28b43; --text-primary: #172334; --text-secondary: #5c6470;
+  --danger: #b43f36; --success: #2f713c;
+  --focus-ring: 0 0 0 3px rgba(153,107,27,.3);
+}
+.theme-toggle { position: fixed; right: 20px; top: 16px; z-index: 5; display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 14px; color: var(--text-primary); background: var(--bg-panel-solid); border: 1px solid var(--grid-line); border-radius: 8px; cursor: pointer; font: 12px var(--font-body); }
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+:root[data-theme="light"] .scene { background: var(--bg-base); }
+:root[data-theme="light"] .scene__grid { opacity: .25; }
+:root[data-theme="light"] .login-card { background: var(--bg-panel); border-color: #e1ded6; box-shadow: 0 16px 60px #1723340a; backdrop-filter: none; }
+:root[data-theme="light"] .btn-primary { background: var(--gold); color: #fff; box-shadow: none; }
+:root[data-theme="light"] .btn-primary__spinner { border-top-color: #fff; }
+:root[data-theme="light"] .brand__mark { color: #fff; }
+@media (max-width: 520px) { .page { padding-top: 80px; } .theme-toggle { right: 12px; top: 12px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

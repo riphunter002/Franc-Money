@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <script src="theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Franc Money — Painel</title>
 
@@ -19,6 +20,7 @@
   <meta name="theme-color" content="#0a0e17" />
 </head>
 <body>
+  <a class="skip-link" href="#mainContent">Ir para o conteúdo</a>
 
   <div class="app-shell">
 
@@ -33,6 +35,7 @@
         <img src="logo-escudo.png" alt="" aria-hidden="true" />
         <span>Franc Money</span>
       </div>
+      <button class="theme-toggle theme-toggle--mobile" type="button" data-theme-toggle aria-label="Ativar tema claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Modo claro</span></button>
     </header>
 
     <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
@@ -45,63 +48,24 @@
       </div>
 
       <nav class="sidebar__nav" aria-label="Navegação principal">
-        <a class="nav-item is-active" href="dashboard.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-          </svg>
-          Painel
-        </a>
-        <a class="nav-item" href="transactions.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 12h16M4 12l5-5M4 12l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 6v12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Transações
-        </a>
-        <a class="nav-item" href="categories.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 6h16M4 12h10M4 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Categorias
-        </a>
-        <a class="nav-item" href="budgets.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 19V10M11 19V5M18 19v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Orçamentos
-        </a>
-        <a class="nav-item" href="investments.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 17l5-5 4 4 7-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M15 8h5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Investimentos
-        </a>
-        <a class="nav-item" href="import.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 3v12M12 3l-4 4M12 3l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Importar
-        </a>
-        <a class="nav-item" href="profile.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M5 20c1.2-3.8 4.2-5.5 7-5.5s5.8 1.7 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Perfil
-        </a>
+        <a class="nav-item is-active" href="dashboard.html" aria-current="page"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></svg><span>Hoje</span></a>
+        <a class="nav-item" href="transactions.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg><span>Movimentações</span></a>
+        <a class="nav-item" href="accounts.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg><span>Contas e cartões</span></a>
+        <a class="nav-item" href="budgets.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16"/></svg><span>Planejamento</span></a>
+        <a class="nav-item" href="investments.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10m6 10V5m6 15v-8m5 8V3"/></svg><span>Patrimônio</span></a>
+        <p class="nav-caption">ORGANIZAR</p>
+        <a class="nav-item" href="categories.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h12M4 18h8"/></svg><span>Categorias</span></a>
+        <a class="nav-item" href="import.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg><span>Importar arquivo</span></a>
       </nav>
 
+      <div class="sidebar__footer"><a class="nav-item" href="profile.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/></svg><span>Configurações</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Modo claro</span></button>
       <button class="sidebar__logout" id="logoutBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="18" height="18">
           <path d="M15 17l5-5-5-5M20 12H9M12 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         Sair
       </button>
+      </div>
     </aside>
 
     <!-- ===================== CONTEÚDO ===================== -->
@@ -109,115 +73,24 @@
       <div class="scene-dashboard__grid"></div>
     </div>
 
-    <main class="main">
-
-      <header class="topbar">
-        <div>
-          <p class="topbar__eyebrow">Bem-vindo(a) de volta</p>
-          <h1 class="topbar__title" id="greetingName">Olá</h1>
-        </div>
-        <button class="btn-gold" id="newTransactionBtn" type="button">
-          + Nova transação
-        </button>
+    <main class="main dashboard-home" id="mainContent">
+      <header class="topbar home-topbar">
+        <div><p class="topbar__eyebrow" id="greetingName">SEU COTIDIANO</p><h1 class="topbar__title">Seu dinheiro, com clareza.</h1></div>
+        <div class="home-actions"><span class="month-label" id="currentMonthLabel"></span><button class="btn-gold" id="newTransactionBtn" type="button"><span aria-hidden="true">＋</span> Novo lançamento</button></div>
       </header>
-
-      <!-- Cartões de resumo -->
       <section class="summary-grid" id="summarySection" aria-label="Resumo financeiro" aria-busy="true">
-        <div class="summary-card summary-card--balance">
-          <p class="summary-card__label">Saldo atual</p>
-          <p class="summary-card__value" id="summaryTotal">—</p>
-          <p class="summary-card__hint">Lançamentos até hoje</p>
-          <p class="summary-card__hint" id="summaryStatus" role="status" aria-live="polite">Carregando resumo financeiro…</p>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-card__icon summary-card__icon--income" aria-hidden="true">↑</div>
-          <p class="summary-card__label">Receitas este mês</p>
-          <p class="summary-card__value summary-card__value--income" id="summaryIncome">—</p>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-card__icon summary-card__icon--expense" aria-hidden="true">↓</div>
-          <p class="summary-card__label">Despesas este mês</p>
-          <p class="summary-card__value summary-card__value--expense" id="summaryExpense">—</p>
-        </div>
+        <div class="summary-card summary-card--balance"><p class="summary-card__label">Saldo do controle</p><p class="summary-card__value" id="summaryTotal">—</p><p class="summary-card__hint">Lançamentos registrados até hoje</p><p class="summary-card__hint" id="summaryStatus" role="status" aria-live="polite">Carregando resumo financeiro…</p></div>
+        <div class="summary-card"><div class="summary-card__icon summary-card__icon--income" aria-hidden="true">↗</div><p class="summary-card__label">Entradas no mês</p><p class="summary-card__value" id="summaryIncome">—</p></div>
+        <div class="summary-card"><div class="summary-card__icon summary-card__icon--expense" aria-hidden="true">↘</div><p class="summary-card__label">Saídas no mês</p><p class="summary-card__value" id="summaryExpense">—</p></div>
       </section>
-
-      <!-- Gráfico + categorias -->
-      <section class="content-grid">
-
-        <div class="panel panel--chart">
-          <div class="panel__header">
-            <h2 class="panel__title">Evolução do saldo</h2>
-            <div class="period-tabs" role="tablist" aria-label="Período do gráfico" id="trendPeriodTabs">
-              <button class="period-tab" type="button" data-months="3">3M</button>
-              <button class="period-tab is-active" type="button" data-months="6">6M</button>
-              <button class="period-tab" type="button" data-months="12">12M</button>
-            </div>
-          </div>
-          <div class="trend-chart__wrap">
-            <svg class="trend-chart" id="trendChart" viewBox="0 0 600 220" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#d4af37" stop-opacity="0.32" />
-                  <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <path id="trendArea" fill="url(#trendFill)" />
-              <path id="trendLine" fill="none" stroke="#f4d160" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-              <line id="trendHoverLine" class="trend-chart__hover-line" hidden />
-              <circle id="trendHoverDot" class="trend-chart__hover-dot" r="5" hidden />
-            </svg>
-            <div class="chart-tooltip" id="trendTooltip" role="status" hidden></div>
-          </div>
-          <div class="trend-chart__labels" id="trendLabels"></div>
-        </div>
-
-        <div class="panel panel--categories">
-          <div class="panel__header">
-            <h2 class="panel__title">Gastos por categoria</h2>
-            <div class="period-tabs" role="tablist" aria-label="Período dos gastos por categoria" id="categoryPeriodTabs">
-              <button class="period-tab" type="button" data-months="1">Mês</button>
-              <button class="period-tab" type="button" data-months="3">3M</button>
-              <button class="period-tab is-active" type="button" data-months="6">6M</button>
-              <button class="period-tab" type="button" data-months="0">Tudo</button>
-            </div>
-          </div>
-          <ul class="category-list" id="categoryBreakdownList">
-            <!-- Preenchido dinamicamente por dashboard.js -->
-          </ul>
-        </div>
-
-      </section>
-
-      <!-- Transações recentes -->
-      <section class="panel panel--transactions">
-        <div class="panel__header">
-          <h2 class="panel__title">Transações recentes</h2>
-          <a class="link" href="transactions.html">Ver todas</a>
-        </div>
-
-        <div class="table-scroll">
-        <table class="transactions-table">
-          <thead>
-            <tr>
-              <th scope="col">Descrição</th>
-              <th scope="col">Categoria</th>
-              <th scope="col">Data</th>
-              <th scope="col" class="align-right">Valor</th>
-            </tr>
-          </thead>
-          <tbody id="transactionsBody" aria-live="polite" aria-busy="true">
-            <tr>
-              <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
-                Carregando transações…
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </section>
-
+      <a class="review-notice" href="import.html" id="reviewNotice" aria-label="Abrir revisão de importações"><span class="review-notice__icon" aria-hidden="true"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg></span><span id="reviewNoticeText" role="status" aria-live="polite">Consultando movimentações para revisar…</span><span aria-hidden="true">›</span></a>
+      <div class="home-grid">
+        <section class="home-section home-section--accounts" aria-labelledby="accountsHeading"><div class="panel__header"><h2 class="panel__title" id="accountsHeading">Suas contas</h2><a class="link" href="accounts.html">Ver contas →</a></div><div class="bank-empty"><span class="empty-state__icon" aria-hidden="true"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg></span><div><h3>Seu banco, mais perto.</h3><p>A integração bancária está em preparação. Seus saldos aparecerão aqui quando ela estiver disponível.</p><a class="link" href="accounts.html">Entenda a conexão →</a></div></div></section>
+        <section class="home-section" aria-labelledby="upcomingHeading"><div class="panel__header"><h2 class="panel__title" id="upcomingHeading">Próximos 7 dias</h2></div><p class="section-note">Despesas cadastradas, a partir de amanhã.</p><ul class="upcoming-list" id="upcomingList" aria-live="polite" aria-busy="true"><li class="manage-list__empty">Carregando próximos lançamentos…</li></ul></section>
+        <section class="home-section" aria-labelledby="categoryHeading"><div class="panel__header"><h2 class="panel__title" id="categoryHeading">Gastos no mês</h2><a class="link" href="budgets.html">Planejar →</a></div><ul class="category-list" id="categoryBreakdownList" aria-live="polite" aria-busy="true"><li class="manage-list__empty">Carregando gastos do mês…</li></ul></section>
+        <section class="home-section home-section--recent" aria-labelledby="recentHeading"><div class="panel__header"><h2 class="panel__title" id="recentHeading">Últimas movimentações</h2><a class="link" href="transactions.html">Ver todas →</a></div><div class="table-scroll"><table class="transactions-table home-transactions"><thead><tr><th scope="col">Descrição</th><th scope="col">Categoria</th><th scope="col">Data</th><th scope="col" class="align-right">Valor</th></tr></thead><tbody id="transactionsBody" aria-live="polite" aria-busy="true"><tr><td colspan="4">Carregando transações…</td></tr></tbody></table></div></section>
+      </div>
+      <footer class="home-footer"><span>Um pouco mais de clareza, todos os dias.</span><div class="home-footer__links"><a href="analytics.html" class="link">Análises e evolução →</a><a href="import.html" class="link">Importar movimentações</a></div></footer>
     </main>
 
     <!-- ===================== MODAL: NOVA TRANSAÇÃO ===================== -->

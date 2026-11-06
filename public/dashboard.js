@@ -75,10 +75,11 @@ async function fetchAllTransactions(token) {
 
   while (true) {
     const response = await fetchWithAuth(`/transactions?limit=${limit}&page=${page}`, token);
-    if (!response.ok) break;
+    if (!response.ok) throw new Error('Falha ao consultar o histórico de transações.');
 
     const { data, meta } = await response.json();
-    all.push(...(data || []));
+    if (!Array.isArray(data)) throw new Error('Histórico de transações inválido.');
+    all.push(...data);
 
     if (!meta || page >= meta.totalPages) break;
     page += 1;
@@ -96,7 +97,7 @@ async function fetchAllTransactions(token) {
    partida correto. Depois, mês a mês, vamos somando o resultado
    líquido daquele mês ao saldo acumulado.
    ---------------------------------------------------------- */
-const monthLabelFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+const monthLabelFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short", timeZone: "UTC" });
 
 function formatMonthLabel(date) {
   const label = monthLabelFormatter.format(date); // ex.: "set."
@@ -108,9 +109,9 @@ function computeMonthlyBalances(transactions, monthsCount = 6) {
 
   const months = [];
   for (let i = monthsCount - 1; i >= 0; i--) {
-    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
     months.push({
-      key: `${start.getFullYear()}-${start.getMonth()}`,
+      key: `${start.getUTCFullYear()}-${start.getUTCMonth()}`,
       label: formatMonthLabel(start),
       start,
     });
@@ -151,7 +152,7 @@ function computeMonthlyBalances(transactions, monthsCount = 6) {
    ---------------------------------------------------------- */
 function getWindowStart(monthsCount) {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() - (monthsCount - 1), 1);
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (monthsCount - 1), 1));
 }
 
 /* ----------------------------------------------------------
@@ -159,14 +160,18 @@ function getWindowStart(monthsCount) {
    período escolhido. monthsCount = 0 significa "sem filtro"
    (todo o histórico).
    ---------------------------------------------------------- */
-function computeCategoryBreakdown(transactions, monthsCount = 6) {
+function computeCategoryBreakdown(transactions, monthsCount = 1) {
+  const now = new Date();
+  const windowEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   const windowStart = monthsCount > 0 ? getWindowStart(monthsCount) : null;
   const totals = new Map();
   let totalSum = 0;
 
   transactions.forEach((tx) => {
     if (tx.type !== "EXPENSE") return;
-    if (windowStart && new Date(tx.date) < windowStart) return;
+    const date = new Date(tx.date);
+    if (!Number.isFinite(date.getTime())) return;
+    if (windowStart && (date < windowStart || date >= windowEnd)) return;
 
     const name = tx.category ? tx.category.name : "Sem categoria";
     const color = tx.category ? tx.category.color : "#8b93a1";
@@ -201,6 +206,16 @@ function renderTrendChart(labels, values) {
   const areaEl = document.getElementById("trendArea");
   const labelsEl = document.getElementById("trendLabels");
   if (!lineEl || !areaEl) return;
+  const chart = document.getElementById('trendChart');
+  if (chart) {
+    chart.removeAttribute('hidden');
+    chart.setAttribute('aria-busy', 'false');
+  }
+  const status = document.getElementById('trendStatus');
+  if (status) {
+    status.hidden = true;
+    status.textContent = '';
+  }
 
   const PADDING_TOP = 16;
   const PADDING_BOTTOM = 16;
@@ -261,13 +276,13 @@ function initTrendChartHover() {
 
     dot.setAttribute("cx", point.x);
     dot.setAttribute("cy", point.y);
-    dot.hidden = false;
+    dot.removeAttribute('hidden');
 
     hoverLine.setAttribute("x1", point.x);
     hoverLine.setAttribute("x2", point.x);
     hoverLine.setAttribute("y1", 0);
     hoverLine.setAttribute("y2", VIEW_HEIGHT);
-    hoverLine.hidden = false;
+    hoverLine.removeAttribute('hidden');
 
     // Converte a posição do ponto (espaço do viewBox 600x220) pra posição
     // real dentro do wrapper, onde o tooltip (um <div> normal) vai ficar
@@ -285,8 +300,8 @@ function initTrendChartHover() {
   }
 
   function handleLeave() {
-    dot.hidden = true;
-    hoverLine.hidden = true;
+    dot.setAttribute('hidden', '');
+    hoverLine.setAttribute('hidden', '');
     tooltip.hidden = true;
   }
 
@@ -331,7 +346,7 @@ function renderCategoryBreakdown(breakdown) {
 
 // Cache das transações carregadas, pra trocar de período (clique nas
 // abas 3M/6M/12M/Mês/Tudo) sem precisar buscar tudo de novo no servidor
-let cachedTransactions = [];
+let cachedTransactions = null;
 
 function getActiveMonths(containerId, fallback) {
   const active = document.querySelector(`#${containerId} .period-tab.is-active`);
@@ -355,7 +370,7 @@ function initPeriodTabs() {
   if (trendTabs) {
     trendTabs.addEventListener("click", (event) => {
       const button = event.target.closest(".period-tab");
-      if (!button) return;
+      if (!button || !cachedTransactions) return;
 
       setActiveTab(trendTabs, button);
       const trend = computeMonthlyBalances(cachedTransactions, Number(button.dataset.months));
@@ -366,7 +381,7 @@ function initPeriodTabs() {
   if (categoryTabs) {
     categoryTabs.addEventListener("click", (event) => {
       const button = event.target.closest(".period-tab");
-      if (!button) return;
+      if (!button || !cachedTransactions) return;
 
       setActiveTab(categoryTabs, button);
       renderCategoryBreakdown(computeCategoryBreakdown(cachedTransactions, Number(button.dataset.months)));
@@ -434,22 +449,113 @@ async function refreshRecentTransactions(token) {
   }
 }
 
-async function refreshAll(token) {
-  // Cada região conclui a própria consulta, mesmo se a outra falhar.
-  await Promise.all([refreshSummary(token), refreshRecentTransactions(token)]);
+function renderListState(id, message, busy = false) {
+  const list = document.getElementById(id);
+  if (!list) return;
+  list.setAttribute('aria-busy', String(busy));
+  list.innerHTML = `<li class="manage-list__empty">${escapeHtml(message)}</li>`;
+}
 
+function renderUpcoming(transactions) {
+  const list = document.getElementById('upcomingList');
+  if (!list) return;
+  const now = new Date();
+  const tomorrow = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 8);
+  const upcoming = transactions.filter((tx) => {
+    const time = new Date(tx.date).getTime();
+    return tx.type === 'EXPENSE' && time >= tomorrow && time < end;
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
+  list.setAttribute('aria-busy', 'false');
+  if (!upcoming.length) {
+    renderListState('upcomingList', 'Nenhuma despesa cadastrada para os próximos sete dias.');
+    return;
+  }
+  const formatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
+  list.innerHTML = upcoming.map((tx) => `<li class="upcoming-row">
+    <span class="upcoming-row__title">${escapeHtml(tx.title)}</span>
+    <span class="upcoming-row__date">${escapeHtml(formatter.format(new Date(tx.date)))}</span>
+    <span class="upcoming-row__amount">${escapeHtml(currencyFormatter.format(Number(tx.amount)))}</span>
+  </li>`).join('');
+}
+
+async function refreshReview(token) {
+  const notice = document.getElementById('reviewNotice');
+  const text = document.getElementById('reviewNoticeText');
+  if (!notice || !text) return;
+  notice.setAttribute('aria-busy', 'true');
+  text.textContent = 'Carregando importações para revisão…';
+  try {
+    const response = await fetchWithAuth('/imported-transactions', token);
+    if (!response.ok) throw new Error('Falha ao consultar importações.');
+    const rows = await response.json();
+    if (!Array.isArray(rows)) throw new Error('Lista de importações inválida.');
+    text.textContent = rows.length
+      ? `${rows.length} ${rows.length === 1 ? 'importação para revisar' : 'importações para revisar'}`
+      : 'Nenhuma importação para revisar.';
+  } catch (err) {
+    text.textContent = 'Não foi possível consultar as importações para revisão. Tente novamente.';
+  } finally {
+    notice.setAttribute('aria-busy', 'false');
+  }
+}
+
+function renderTrendState(message, busy = false) {
+  const status = document.getElementById('trendStatus');
+  if (status) {
+    status.textContent = message;
+    status.hidden = false;
+  }
+  const chart = document.getElementById('trendChart');
+  if (chart) {
+    chart.setAttribute('hidden', '');
+    chart.setAttribute('aria-busy', String(busy));
+  }
+  ['trendLine', 'trendArea'].forEach((id) => document.getElementById(id)?.setAttribute('d', ''));
+  const labels = document.getElementById('trendLabels');
+  if (labels) labels.innerHTML = '';
+  ['trendHoverDot', 'trendHoverLine'].forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) element.setAttribute('hidden', '');
+  });
+  const tooltip = document.getElementById('trendTooltip');
+  if (tooltip) tooltip.hidden = true;
+  trendChartState.points = [];
+  trendChartState.labels = [];
+  trendChartState.values = [];
+}
+
+async function refreshHistoricalTransactions(token) {
+  // Histórico interrompido invalida o cache para impedir cálculos parciais nas abas.
+  cachedTransactions = null;
+  renderTrendState('Carregando evolução do saldo…', true);
+  renderListState('categoryBreakdownList', 'Carregando gastos do mês…', true);
+  renderListState('upcomingList', 'Carregando próximos dias…', true);
   try {
     cachedTransactions = await fetchAllTransactions(token);
-
-    const trendMonths = getActiveMonths("trendPeriodTabs", 6);
-    const trend = computeMonthlyBalances(cachedTransactions, trendMonths);
+    const trend = computeMonthlyBalances(cachedTransactions, getActiveMonths('trendPeriodTabs', 6));
     renderTrendChart(trend.labels, trend.values);
-
-    const categoryMonths = getActiveMonths("categoryPeriodTabs", 6);
-    renderCategoryBreakdown(computeCategoryBreakdown(cachedTransactions, categoryMonths));
+    renderCategoryBreakdown(computeCategoryBreakdown(cachedTransactions, getActiveMonths('categoryPeriodTabs', 1)));
+    document.getElementById('categoryBreakdownList')?.setAttribute('aria-busy', 'false');
+    renderUpcoming(cachedTransactions);
   } catch (err) {
-    console.error("Erro ao calcular gráfico/categorias:", err);
+    cachedTransactions = null;
+    renderTrendState('Não foi possível carregar a evolução do saldo. Recarregue a página para tentar novamente.');
+    renderListState('categoryBreakdownList', 'Não foi possível carregar os gastos. Recarregue a página para tentar novamente.');
+    renderListState('upcomingList', 'Não foi possível carregar os próximos dias. Recarregue a página para tentar novamente.');
   }
+}
+
+async function refreshAll(token) {
+  const month = document.getElementById('currentMonthLabel');
+  if (month) month.textContent = new Intl.DateTimeFormat('pt-BR', {
+    month: 'long', year: 'numeric', timeZone: 'UTC'
+  }).format(new Date());
+  // Cada região conclui sua consulta sem aguardar ou depender das outras.
+  await Promise.all([
+    refreshSummary(token), refreshRecentTransactions(token),
+    refreshReview(token), refreshHistoricalTransactions(token)
+  ]);
 }
 
 /* ----------------------------------------------------------

@@ -2,8 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <script src="theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franc Money — Orçamentos</title>
+  <title>Franc Money — Planejamento</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,6 +20,7 @@
   <meta name="theme-color" content="#0a0e17" />
 </head>
 <body>
+  <a class="skip-link" href="#mainContent">Ir para o conteúdo</a>
 
   <div class="app-shell">
 
@@ -33,6 +35,7 @@
         <img src="logo-escudo.png" alt="" aria-hidden="true" />
         <span>Franc Money</span>
       </div>
+      <button class="theme-toggle theme-toggle--mobile" type="button" data-theme-toggle aria-label="Ativar tema claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Modo claro</span></button>
     </header>
 
     <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
@@ -45,63 +48,24 @@
       </div>
 
       <nav class="sidebar__nav" aria-label="Navegação principal">
-        <a class="nav-item" href="dashboard.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-          </svg>
-          Painel
-        </a>
-        <a class="nav-item" href="transactions.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 12h16M4 12l5-5M4 12l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 6v12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Transações
-        </a>
-        <a class="nav-item" href="categories.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 6h16M4 12h10M4 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Categorias
-        </a>
-        <a class="nav-item is-active" href="budgets.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 19V10M11 19V5M18 19v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Orçamentos
-        </a>
-        <a class="nav-item" href="investments.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 17l5-5 4 4 7-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M15 8h5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Investimentos
-        </a>
-        <a class="nav-item" href="import.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 3v12M12 3l-4 4M12 3l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Importar
-        </a>
-        <a class="nav-item" href="profile.html">
-          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M5 20c1.2-3.8 4.2-5.5 7-5.5s5.8 1.7 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          Perfil
-        </a>
+        <a class="nav-item" href="dashboard.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></svg><span>Hoje</span></a>
+        <a class="nav-item" href="transactions.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg><span>Movimentações</span></a>
+        <a class="nav-item" href="accounts.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg><span>Contas e cartões</span></a>
+        <a class="nav-item is-active" href="budgets.html" aria-current="page"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16"/></svg><span>Planejamento</span></a>
+        <a class="nav-item" href="investments.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10m6 10V5m6 15v-8m5 8V3"/></svg><span>Patrimônio</span></a>
+        <p class="nav-caption">ORGANIZAR</p>
+        <a class="nav-item" href="categories.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h12M4 18h8"/></svg><span>Categorias</span></a>
+        <a class="nav-item" href="import.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg><span>Importar arquivo</span></a>
       </nav>
 
+      <div class="sidebar__footer"><a class="nav-item" href="profile.html"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/></svg><span>Configurações</span></a><button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Modo claro</span></button>
       <button class="sidebar__logout" id="logoutBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="18" height="18">
           <path d="M15 17l5-5-5-5M20 12H9M12 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         Sair
       </button>
+      </div>
     </aside>
 
     <!-- ===================== CONTEÚDO ===================== -->
@@ -109,12 +73,12 @@
       <div class="scene-dashboard__grid"></div>
     </div>
 
-    <main class="main">
+    <main class="main" id="mainContent">
 
       <header class="topbar">
         <div>
           <p class="topbar__eyebrow">Fique no controle</p>
-          <h1 class="topbar__title">Orçamentos</h1>
+          <h1 class="topbar__title">Planejamento</h1>
         </div>
       </header>
 

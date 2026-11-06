@@ -47,6 +47,9 @@ Franc Money/
 │   ├── register.html / .css / .js   (cadastro)
 │   ├── forgot-password.html / .js   (pedir redefinição de senha)
 │   ├── reset-password.html / .js    (definir nova senha via token)
+│   ├── theme.js               (tema claro/escuro; carregar cedo no head de TODA página)
+│   ├── accounts.html / .js    (estado informativo: integração bancária ainda pendente)
+│   ├── analytics.html         (evolução e filtros, compartilhando dashboard.js)
 │   ├── session.js             (COMPARTILHADO: sessão, fetchWithAuth, formatação,
 │   │                            menu hambúrguer mobile)
 │   ├── dashboard.html / .js
@@ -98,6 +101,15 @@ Franc Money/
 ├── .env                       (NÃO commitar)
 └── package.json
 ```
+
+## Interface Cotidiano
+
+- O início segue a direção editorial aprovada: áreas abertas, divisórias e navegação lateral.
+- Escuro é o padrão; claro usa fundo quente e ocre. `theme.js` persiste `franc_theme`
+  e aplica `data-theme` antes da pintura. Botões usam `data-theme-toggle`.
+- Saldo do controle vem dos lançamentos, não da conta bancária. Não preencher contas
+  com dados fictícios: `accounts.html` informa que a integração ainda não está disponível.
+- Evolução e filtros de períodos continuam em `analytics.html`, acessível no rodapé do início.
 
 ## Convenções do projeto
 

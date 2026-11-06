@@ -10,6 +10,7 @@ const budgetRoutes = require('./routes/budgetRoutes');
 const importedTransactionRoutes = require('./routes/importedTransactionRoutes');
 const recurringTransactionRoutes = require('./routes/recurringTransactionRoutes');
 const investmentRoutes = require('./routes/investmentRoutes');
+const bankAccountsRoutes = require('./routes/bankAccountsRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 
@@ -34,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Rotas da API
 app.use(userRoutes);
+app.use(bankAccountsRoutes);
 app.use(transactionRoutes);
 app.use(categoryRoutes);
 app.use(budgetRoutes);

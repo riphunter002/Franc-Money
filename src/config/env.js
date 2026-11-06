@@ -28,6 +28,10 @@ const envSchema = z.object({
   // Resend. Com um domínio verificado no Resend, pode virar algo como
   // 'Franc Money <nao-responda@seudominio.com>'.
   RESEND_FROM: z.string().default('Franc Money <onboarding@resend.dev>'),
+  PLUGGY_OWNER_USER_ID: z.string().optional(),
+  PLUGGY_CLIENT_ID: z.string().optional(),
+  PLUGGY_CLIENT_SECRET: z.string().optional(),
+  PLUGGY_ITEMS: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

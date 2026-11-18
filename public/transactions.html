@@ -13,13 +13,13 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="dashboard.css?v=8" />
+  <link rel="stylesheet" href="dashboard.css?v=9" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#0a0e17" />
 </head>
-<body>
+<body class="transactions-page">
   <a class="skip-link" href="#mainContent">Ir para o conteúdo</a>
 
   <div class="app-shell">
@@ -77,18 +77,18 @@
 
       <header class="topbar">
         <div>
-          <p class="topbar__eyebrow">Todo o seu histórico</p>
+          <p class="topbar__eyebrow">Todas as suas contas, em um só lugar</p>
           <h1 class="topbar__title">Movimentações</h1>
         </div>
         <button class="btn-gold" id="newTransactionBtn" type="button">
-          + Nova transação
+          + Novo lançamento
         </button>
       </header>
 
       <div class="mobile-search">
         <form id="mobileSearchForm" role="search">
-          <label class="sr-only" for="transactionSearch">Buscar por título ou descrição</label>
-          <input class="modal-input" id="transactionSearch" type="search" maxlength="120" placeholder="Buscar movimentação" enterkeyhint="search" />
+          <label class="sr-only" for="transactionSearch">Buscar por nome ou descrição</label>
+          <input class="modal-input" id="transactionSearch" type="search" maxlength="120" placeholder="Buscar por nome ou descrição" enterkeyhint="search" />
           <button type="submit" class="btn-secondary" aria-label="Buscar">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="5.5"/><path d="m14 14 5 5"/></svg>
           </button>
@@ -98,7 +98,7 @@
 
       <!-- Filtros -->
       <section class="panel panel--filters" id="transactionFilters">
-        <form id="filtersForm" class="filters-form">
+        <form id="filtersForm" class="filters-form"><div class="modal-field filters-form__field"><label class="modal-label" for="filterBank">Banco</label><select class="modal-input" id="filterBank"><option value="">Todos os bancos</option><option value="NUBANK">Nubank</option><option value="PICPAY">PicPay</option><option value="PAN">Banco PAN</option></select></div><div class="modal-field filters-form__field"><label class="modal-label" for="filterPaymentMethod">Forma de pagamento</label><select class="modal-input" id="filterPaymentMethod"><option value="">Todas as formas</option><option value="PIX">Pix</option><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX_CREDIT">Pix no crédito</option></select></div><div class="modal-field filters-form__field"><label class="modal-label" for="filterCategory">Categoria</label><select class="modal-input" id="filterCategory"><option value="">Todas as categorias</option></select></div>
           <div class="modal-field filters-form__field">
             <label for="filterType" class="modal-label">Tipo</label>
             <select id="filterType" class="modal-input">
@@ -125,6 +125,12 @@
         </form>
       </section>
 
+      <nav class="bank-filters" aria-label="Filtrar por banco">
+        <button class="bank-filter is-active" type="button" data-bank="" aria-pressed="true">Todos</button>
+        <button class="bank-filter" type="button" data-bank="NUBANK" aria-pressed="false"><span class="bank-mark bank-mark--nubank" aria-hidden="true">nu</span>Nubank</button>
+        <button class="bank-filter" type="button" data-bank="PICPAY" aria-pressed="false"><span class="bank-mark bank-mark--picpay" aria-hidden="true">P</span>PicPay</button>
+        <button class="bank-filter" type="button" data-bank="PAN" aria-pressed="false"><span class="bank-mark bank-mark--pan" aria-hidden="true">PAN</span>Banco PAN</button>
+      </nav>
       <!-- Tabela -->
       <section class="panel panel--transactions" id="transactionResults">
         <div class="table-scroll transaction-table-desktop">
@@ -132,8 +138,8 @@
             <thead>
               <tr>
                 <th scope="col">Descrição</th>
-                <th scope="col">Categoria</th>
                 <th scope="col">Data</th>
+                <th scope="col">Forma de pagamento</th>
                 <th scope="col" class="align-right">Valor</th>
                 <th scope="col" class="align-right">Ações</th>
               </tr>
@@ -259,6 +265,8 @@
 
           <p class="modal-error" id="txFormError" role="alert"></p>
 
+          <div class="transaction-classification"><div class="modal-field filters-form__field"><label class="modal-label" for="txBank">Banco</label><select class="modal-input" id="txBank"><option value="">Banco não informado</option><option value="NUBANK">Nubank</option><option value="PICPAY">PicPay</option><option value="PAN">Banco PAN</option></select></div><div class="modal-field filters-form__field"><label class="modal-label" for="txPaymentMethod">Forma de pagamento</label><select class="modal-input" id="txPaymentMethod"><option value="">Forma a confirmar</option><option value="PIX">Pix</option><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX_CREDIT">Pix no crédito</option></select></div></div>
+          <p class="classification-hint">Preencha apenas quando souber. Esses campos classificam o lançamento e não conectam uma conta bancária.</p>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="txCancelBtn">Cancelar</button>
             <button type="submit" class="btn-gold" id="txSubmitBtn">Salvar transação</button>
@@ -271,6 +279,7 @@
 
   <script src="pwa.js"></script>
   <script src="session.js?v=8"></script>
-  <script src="transactions.js"></script>
+  <script src="transactionPresentation.js?v=9"></script>
+  <script src="transactions.js?v=9"></script>
 </body>
 </html>

@@ -485,4 +485,41 @@ if (!connectionString) {
     assert.equal(list.body.data.length, 1);
     assert.equal(list.body.meta.total, 1);
   });
+  test('banco e pagamento persistem no PostgreSQL, filtram antes de paginar e podem ser removidos', async () => {
+    const owner = await user();
+    const other = await user();
+    const create = async (userId, bank, payment_method) => {
+      const res = response();
+      await transactions.create({ userId, body: { title: 'Classificação', amount: 120, type: 'EXPENSE', bank, payment_method } }, res, err => { throw err; });
+      return res.body;
+    };
+    const saved = await create(owner.id, 'NUBANK', 'PIX');
+    await create(owner.id, 'PAN', 'DEBIT');
+    await create(other.id, 'NUBANK', 'PIX');
+    const list = response();
+    await transactions.listByUser({ userId: owner.id, query: { bank: 'NUBANK', payment_method: 'PIX' } }, list, err => { throw err; });
+    assert.equal(list.body.meta.total, 1);
+    assert.equal(list.body.data[0].id, saved.id);
+    const edit = response();
+    await transactions.update({ userId: owner.id, params: { id: saved.id }, body: { title: 'Renomeado' } }, edit, err => { throw err; });
+    assert.equal(edit.body.bank, 'NUBANK');
+    assert.equal(edit.body.payment_method, 'PIX');
+    await transactions.update({ userId: owner.id, params: { id: saved.id }, body: { bank: null, payment_method: null } }, response(), err => { throw err; });
+    const cleared = await prisma.transaction.findUnique({ where: { id: saved.id } });
+    assert.equal(cleared.bank, null);
+    assert.equal(cleared.payment_method, null);
+  });
+
+  test('parcelamento classificado grava banco e método em todas as parcelas no PostgreSQL', async () => {
+    const owner = await user();
+    const res = response();
+    await recurringController.create({ userId: owner.id, body: {
+      title: 'Compra', amount: 50, type: 'EXPENSE', start_date: '2026-11-18',
+      installments_total: 3, bank: 'PICPAY', payment_method: 'PIX_CREDIT'
+    } }, res, err => { throw err; });
+    const rows = await prisma.transaction.findMany({ where: { user_id: owner.id } });
+    assert.equal(rows.length, 3);
+    assert.ok(rows.every(tx => tx.bank === 'PICPAY' && tx.payment_method === 'PIX_CREDIT'));
+  });
+
 }

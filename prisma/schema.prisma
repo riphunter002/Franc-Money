@@ -91,6 +91,8 @@ model ImportedTransaction {
 // gera só a primeira na criação e as próximas conforme o app é aberto —
 // ver generateDueRecurringTransactions em recurringTransactionService.js).
 model RecurringTransaction {
+  bank                    String?
+  payment_method          String?
   id                      String    @id @default(uuid())
   title                   String
   description             String?
@@ -114,6 +116,8 @@ model RecurringTransaction {
 }
 
 model Transaction {
+  bank        String?
+  payment_method String?
   id          String    @id @default(uuid())
   title       String
   description String?

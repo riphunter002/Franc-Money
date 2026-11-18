@@ -21,94 +21,48 @@ let latestRequest = 0;
 function renderTransactionsTable(transactions) {
   const tbody = document.getElementById("transactionsBody");
   const mobileList = document.getElementById("mobileTransactions");
-  if (!tbody) return;
-
   if (!transactions.length) {
     mobileList.textContent = "Nenhuma movimentação encontrada.";
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 24px 12px;">
-          Nenhuma transação encontrada para esse filtro.
-        </td>
-      </tr>
-    `;
+    tbody.innerHTML = '<tr><td colspan="5" class="transaction-empty">Nenhuma movimentação encontrada para esses filtros.</td></tr>';
     return;
   }
-
   const mobileRows = [];
-  let previousDay;
-  tbody.innerHTML = transactions
-    .map((tx) => {
-      const isIncome = tx.type === "INCOME";
-      const sign = isIncome ? "+" : "−";
-      const amount = currencyFormatter.format(Math.abs(Number(tx.amount)));
-      const categoryName = tx.category ? tx.category.name : "Sem categoria";
-      const dateLabel = dateFormatter.format(new Date(tx.date));
-
-      // Selo de recorrência: "Parcela 2/6" se veio de um parcelamento, ou
-      // "🔁 Recorrente" se veio de uma recorrência sem fim (salário, aluguel...)
-      let recurrenceBadge = "";
-      if (tx.installment_number && tx.recurringTransaction) {
-        recurrenceBadge = `<span class="tag tag--recurring">Parcela ${tx.installment_number}/${tx.recurringTransaction.installments_total}</span>`;
-      } else if (tx.recurring_transaction_id) {
-        recurrenceBadge = `<span class="tag tag--recurring">🔁 Recorrente</span>`;
-      }
-
-      // "Cancelar recorrência" só faz sentido pra recorrência sem fim — uma
-      // parcela já nasceu com todo o plano fechado, não tem o que cancelar
-      const cancelRecurrenceBtn =
-        tx.recurring_transaction_id && !tx.installment_number
-          ? `<button type="button" class="row-actions__btn" data-action="cancel-recurrence" data-recurring-id="${tx.recurring_transaction_id}">Cancelar recorrência</button>`
-          : "";
-      const actions = `
-        ${cancelRecurrenceBtn}
-        <button type="button" class="row-actions__btn" data-action="edit" data-id="${tx.id}">Editar</button>
-        <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${tx.id}">Excluir</button>
-      `;
-      const amountClass = isIncome ? "tx-amount--income" : "tx-amount--expense";
-      if (dateLabel !== previousDay) {
-        mobileRows.push(`<h2 class="mobile-transaction-day">${dateLabel}</h2>`);
-        previousDay = dateLabel;
-      }
-      mobileRows.push(`
-        <details class="mobile-transaction">
-          <summary>
-            <span class="mobile-transaction__name">
-              <strong>${escapeHtml(tx.title)}</strong>
-              <small>${escapeHtml(categoryName)}</small>
-            </span>
-            <span class="tx-amount ${amountClass}">${sign} ${amount}</span>
-            <span class="mobile-transaction__chevron" aria-hidden="true">›</span>
-          </summary>
-          <div class="mobile-transaction__details">
-            ${recurrenceBadge}
-            ${tx.description ? `<p>${escapeHtml(tx.description)}</p>` : ""}
-            <div class="row-actions">${actions}</div>
-          </div>
-        </details>
-      `);
-
-      return `
-        <tr>
-          <td>
-            <div class="tx-desc">
-              <span class="tx-dot ${isIncome ? "tx-dot--income" : "tx-dot--expense"}" aria-hidden="true"></span>
-              ${escapeHtml(tx.title)}
-              ${recurrenceBadge}
-            </div>
-          </td>
-          <td><span class="tag">${escapeHtml(categoryName)}</span></td>
-          <td>${dateLabel}</td>
-          <td class="align-right tx-amount ${amountClass}">
-            ${sign} ${amount}
-          </td>
-          <td>
-            <div class="row-actions">${actions}</div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+  tbody.innerHTML = transactions.map((tx) => {
+    const view = transactionPresentation(tx);
+    const amount = `${tx.type === "INCOME" ? "+" : "−"} ${currencyFormatter.format(Math.abs(Number(tx.amount)))}`;
+    const dateLabel = dateFormatter.format(new Date(tx.date));
+    const category = tx.category?.name || "Sem categoria";
+    const recurrence = tx.installment_number && tx.recurringTransaction?.installments_total
+      ? `Parcela ${tx.installment_number}/${tx.recurringTransaction.installments_total}`
+      : tx.recurring_transaction_id ? "Recorrente" : "";
+    const subtitle = [view.bankName, category, recurrence].filter(Boolean).map(escapeHtml).join(" · ");
+    // IDs também são escapados: dados externos nunca viram atributos executáveis.
+    const actions = `
+      ${tx.recurring_transaction_id && !tx.installment_number ? `<button type="button" class="row-actions__btn" data-action="cancel-recurrence" data-recurring-id="${escapeHtml(tx.recurring_transaction_id)}">Cancelar recorrência</button>` : ""}
+      <button type="button" class="row-actions__btn" data-action="edit" data-id="${escapeHtml(tx.id)}" aria-label="Editar ${escapeHtml(tx.title)}">Editar</button>
+      <button type="button" class="row-actions__btn row-actions__btn--danger" data-action="delete" data-id="${escapeHtml(tx.id)}" aria-label="Excluir ${escapeHtml(tx.title)}">Excluir</button>`;
+    mobileRows.push(`
+      <details class="mobile-transaction ${view.className}">
+        <summary>
+          ${view.icons}
+          <span class="mobile-transaction__name"><strong>${escapeHtml(tx.title)}</strong><small>${subtitle}</small></span>
+          <span class="tx-amount">${amount}</span>
+          <span class="mobile-transaction__payment">${view.payment}</span>
+          <span class="mobile-transaction__chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="mobile-transaction__details"><p>${dateLabel}</p>
+          ${tx.description ? `<p>${escapeHtml(tx.description)}</p>` : ""}
+          <div class="row-actions">${actions}</div>
+        </div>
+      </details>`);
+    return `<tr class="${view.className}">
+      <td><div class="transaction-description">${view.icons}<div><strong>${escapeHtml(tx.title)}</strong><small>${subtitle}</small>${tx.description ? `<small>${escapeHtml(tx.description)}</small>` : ""}</div></div></td>
+      <td class="transaction-date">${dateLabel}</td>
+      <td>${view.payment}</td>
+      <td class="align-right tx-amount">${amount}</td>
+      <td><div class="row-actions">${actions}</div></td>
+    </tr>`;
+  }).join("");
   mobileList.innerHTML = mobileRows.join("");
 }
 
@@ -139,6 +93,10 @@ function getActiveFilters() {
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
   if (activeSearch) params.set("search", activeSearch);
+  for (const [id, key] of [["filterBank", "bank"], ["filterPaymentMethod", "payment_method"], ["filterCategory", "category_id"]]) {
+    const value = document.getElementById(id).value;
+    if (value) params.set(key, value);
+  }
 
   return params.toString();
 }
@@ -268,6 +226,8 @@ async function openModal(transaction = null) {
 
   lastFocusedElement = document.activeElement;
   form.reset();
+  document.getElementById("txBank").value = transaction?.bank || "";
+  document.getElementById("txPaymentMethod").value = transaction?.payment_method || "";
   setFormError("");
 
   const isEditing = Boolean(transaction);
@@ -375,7 +335,11 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  const payload = { title, amount: amountValue, type, date };
+  const payload = {
+    title, amount: amountValue, type, date,
+    bank: document.getElementById("txBank").value || null,
+    payment_method: document.getElementById("txPaymentMethod").value || null
+  };
   if (description) payload.description = description;
 
   // Ao criar, simplesmente omitimos o campo se não houver categoria selecionada.
@@ -523,6 +487,7 @@ function initTransactionsPage() {
 
   cachedToken = auth.token;
   loadTransactions(auth.token);
+  loadFilterCategories(auth.token);
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
     clearStoredAuth();
@@ -538,15 +503,17 @@ function initTransactionsPage() {
     currentPage = 1;
     loadTransactions(auth.token);
   });
-  window.matchMedia("(max-width: 600px)").addEventListener("change", (event) => {
-    if (!event.matches && activeSearch) {
-      activeSearch = "";
-      search.value = "";
-      currentPage = 1;
-      loadTransactions(auth.token);
-    }
-  });
 
+
+  document.querySelector(".bank-filters").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-bank]");
+    if (!button) return;
+    document.getElementById("filterBank").value = button.dataset.bank;
+    currentPage = 1;
+    syncBankFilters();
+    loadTransactions(auth.token);
+  });
+  document.getElementById("filterBank").addEventListener("change", syncBankFilters);
   const filtersButton = document.getElementById("mobileFiltersBtn");
   filtersButton.addEventListener("click", () => {
     const filters = document.getElementById("transactionFilters");
@@ -557,10 +524,15 @@ function initTransactionsPage() {
   document.getElementById("filtersForm").addEventListener("submit", (event) => {
     event.preventDefault();
     currentPage = 1;
+    syncBankFilters();
     loadTransactions(auth.token);
   });
 
   document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+    for (const id of ["filterBank", "filterPaymentMethod", "filterCategory"]) document.getElementById(id).value = "";
+    search.value = "";
+    activeSearch = "";
+    syncBankFilters();
     document.getElementById("filterType").value = "";
     document.getElementById("filterStartDate").value = "";
     document.getElementById("filterEndDate").value = "";
@@ -584,3 +556,23 @@ function initTransactionsPage() {
 }
 
 document.addEventListener("DOMContentLoaded", initTransactionsPage);
+
+// As categorias são carregadas uma vez; os filtros continuam operando no servidor.
+async function loadFilterCategories(token) {
+  try {
+    const response = await fetchWithAuth("/categories", token);
+    if (!response.ok) return;
+    const categories = await response.json();
+    const select = document.getElementById("filterCategory");
+    categories.forEach(category => select.add(new Option(category.name, category.id)));
+  } catch { /* A lista principal mantém seu próprio estado de erro. */ }
+}
+
+function syncBankFilters() {
+  const selected = document.getElementById("filterBank").value;
+  document.querySelectorAll(".bank-filter").forEach(button => {
+    const active = button.dataset.bank === selected;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}

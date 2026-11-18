@@ -1,10 +1,12 @@
 // src/controllers/TransactionController.js
 const prisma = require('../config/prisma');
 const { z } = require('zod');
+const { bankClassification } = require('../services/bankClassification');
 const { generateDueRecurringTransactions } = require('../services/recurringTransactionService');
 const { currentMonthRangeUTC } = require('../services/dateRangeService');
 
 const transactionSchema = z.object({
+  ...bankClassification,
   title: z.string().trim().min(1, 'O título é obrigatório e não pode estar vazio.'),
   description: z.string().optional(),
   amount: z.coerce.number().positive('O valor deve ser um número maior que zero.'),
@@ -24,7 +26,7 @@ const updateTransactionSchema = transactionSchema.partial();
 module.exports = {
   async create(req, res, next) {
     try {
-      const { title, description, amount, type, date, category_id } = transactionSchema.parse(req.body);
+      const { title, description, amount, type, date, category_id, bank, payment_method } = transactionSchema.parse(req.body);
       const user_id = req.userId;
 
       if (category_id != null) {
@@ -37,7 +39,7 @@ module.exports = {
       }
 
       const transaction = await prisma.transaction.create({
-        data: { title, description, amount, type, date, user_id, category_id },
+        data: { title, description, amount, type, date, user_id, category_id, bank, payment_method },
       });
 
       return res.status(201).json(transaction);
@@ -58,7 +60,12 @@ module.exports = {
       // Captura page e limit da URL (padrão: página 1, 10 itens)
       const { type, startDate, endDate, search, page = 1, limit = 10 } = req.query;
 
-      const filters = { user_id: userId };
+      const classification = z.object({
+        bank: bankClassification.bank,
+        payment_method: bankClassification.payment_method,
+        category_id: z.string().uuid().optional()
+      }).parse(req.query);
+      const filters = { user_id: userId, ...classification };
 
       if (type) filters.type = type;
       if (typeof search === 'string' && search.trim()) {
@@ -151,7 +158,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const user_id = req.userId; // ID extraído do token JWT
-      const { title, description, amount, type, date, category_id } = updateTransactionSchema.parse(req.body);
+      const { title, description, amount, type, date, category_id, bank, payment_method } = updateTransactionSchema.parse(req.body);
 
       // Verifica se a transação existe E pertence a este usuário
       const existingTransaction = await prisma.transaction.findFirst({
@@ -173,7 +180,7 @@ module.exports = {
 
       const transaction = await prisma.transaction.update({
         where: { id },
-        data: { title, description, amount, type, date, category_id },
+        data: { title, description, amount, type, date, category_id, bank, payment_method },
       });
 
       return res.status(200).json(transaction);

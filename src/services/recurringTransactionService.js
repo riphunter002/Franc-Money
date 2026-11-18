@@ -34,6 +34,8 @@ async function materializeOccurrences(prisma, recurring, uptoCount) {
   for (let i = recurring.installments_generated; i < uptoCount; i++) {
     await prisma.transaction.create({
       data: {
+        bank: recurring.bank,
+        payment_method: recurring.payment_method,
         title: recurring.title,
         description: recurring.description,
         amount: recurring.amount,

@@ -287,3 +287,20 @@ O app está publicado em **https://franc-money.onrender.com**.
   mesmo e-mail com que o Resend foi cadastrado. O token de reset nunca aparece
   na resposta da API, então saber o e-mail de alguém não basta pra invadir a
   conta.
+
+
+## Movimentações por banco (18/11/2026)
+
+- `Transaction` e `RecurringTransaction` possuem `bank` e `payment_method` opcionais.
+  Banco: `NUBANK`, `PICPAY`, `PAN`; pagamento: `PIX`, `DEBIT`, `CREDIT`, `PIX_CREDIT`.
+- POST/PUT aceitam esses campos; null remove a classificação; omissão em PUT preserva.
+- GET `/transactions` aceita também `bank`, `payment_method` e `category_id`, aplicados
+  no servidor antes da paginação. Busca por título/descrição disponível no PC e mobile.
+- `transactionPresentation.js` fornece ícones, cores e selos compartilhados entre
+  tabela desktop e cartões expansíveis mobile. Nenhum método/banco é inferido do título.
+- Os campos podem ser preenchidos no formulário. A consulta Pluggy atual não importa
+  transações: classificação manual não equivale à confirmação automática pelo banco.
+- Migração `20261118180000_transaction_bank_method` é aditiva e mantém null no histórico.
+  Antes de executar este código contra um banco existente, aplicar as migrations e gerar
+  o cliente Prisma. O build de publicação já executa essas duas etapas.
+- CSS/cache PWA v9. A API e o HTML continuam fora do cache.

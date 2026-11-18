@@ -7,10 +7,10 @@
 //
 // Ao mudar CSS/JS, é preciso subir o número da versão abaixo pra invalidar
 // o cache antigo (senão o navegador continuaria servindo o arquivo velho).
-const CACHE_NAME = 'franc-money-v8';
+const CACHE_NAME = 'franc-money-v9';
 
 const PRECACHE_URLS = [
-  '/dashboard.css?v=8',
+  '/dashboard.css?v=9',
   '/style.css',
   '/register.css',
   '/session.js?v=8',

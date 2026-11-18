@@ -35,6 +35,14 @@ routes.use(authMiddleware);
  *               type:
  *                 type: string
  *                 enum: [INCOME, EXPENSE]
+ *               bank:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [NUBANK, PICPAY, PAN]
+ *               payment_method:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [PIX, DEBIT, CREDIT, PIX_CREDIT]
  *               category_id:
  *                 type: string
  *                 format: uuid
@@ -79,6 +87,21 @@ routes.post('/transactions', TransactionController.create);
  *           type: string
  *           maxLength: 120
  *         description: Busca por trecho no título ou na descrição
+ *       - in: query
+ *         name: bank
+ *         schema:
+ *           type: string
+ *           enum: [NUBANK, PICPAY, PAN]
+ *       - in: query
+ *         name: payment_method
+ *         schema:
+ *           type: string
+ *           enum: [PIX, DEBIT, CREDIT, PIX_CREDIT]
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: string
+ *           format: uuid
  *       - in: query
  *         name: page
  *         schema:
@@ -152,6 +175,14 @@ routes.get('/summary', TransactionController.getSummary);
  *               type:
  *                 type: string
  *                 enum: [INCOME, EXPENSE]
+ *               bank:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [NUBANK, PICPAY, PAN]
+ *               payment_method:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [PIX, DEBIT, CREDIT, PIX_CREDIT]
  *               category_id:
  *                 type: string
  *                 format: uuid

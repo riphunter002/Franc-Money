@@ -1,9 +1,11 @@
 // src/controllers/RecurringTransactionController.js
 const prisma = require('../config/prisma');
 const { z } = require('zod');
+const { bankClassification } = require('../services/bankClassification');
 const { generateInitialOccurrences } = require('../services/recurringTransactionService');
 
 const recurringSchema = z.object({
+  ...bankClassification,
   title: z.string().trim().min(1, 'O título é obrigatório e não pode estar vazio.'),
   description: z.string().optional(),
   amount: z.coerce.number().positive('O valor deve ser um número maior que zero.'),
@@ -19,7 +21,7 @@ const recurringSchema = z.object({
 module.exports = {
   async create(req, res, next) {
     try {
-      const { title, description, amount, type, category_id, start_date, installments_total } =
+      const { title, description, amount, type, category_id, start_date, installments_total, bank, payment_method } =
         recurringSchema.parse(req.body);
       const user_id = req.userId;
 
@@ -35,6 +37,8 @@ module.exports = {
       const updated = await prisma.$transaction(async (tx) => {
         const recurring = await tx.recurringTransaction.create({
           data: {
+            bank,
+            payment_method,
             title,
             description,
             amount,

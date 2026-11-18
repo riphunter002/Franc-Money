@@ -2060,3 +2060,102 @@ button { touch-action: manipulation; }
   from { transform: translateY(28px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* Movimentações: identidade do banco e forma de pagamento são independentes. */
+.transactions-page .main { min-width: 0; }
+.transactions-page .mobile-search { display:flex; gap:12px; }
+.transactions-page .mobile-search form { display:flex; flex:1; gap:8px; min-width:0; }
+.transactions-page .mobile-search input { flex:1; min-width:0; }
+.transactions-page .mobile-search form > button { flex:0 0 48px; width:48px; min-width:48px; padding:10px; }
+.transactions-page #mobileFiltersBtn { display:none; }
+.transactions-page .filters-form { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+.transactions-page .filters-form__field { flex:1 1 145px; min-width:0; }
+.transactions-page .panel--filters { padding:0; background:transparent; border:0; }
+.transactions-page .bank-filters { display:flex; flex-wrap:wrap; gap:10px; }
+.bank-filter { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:44px; padding:8px 16px; border:1px solid var(--border); border-radius:18px; background:var(--bg-card, transparent); color:var(--text-primary); font:inherit; cursor:pointer; }
+.bank-filter.is-active { background:var(--gold); color:#17130a; border-color:var(--gold); }
+.bank-mark { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; flex:0 0 36px; border-radius:50%; background:#fff; font-size:20px; font-weight:800; font-family:Inter,sans-serif; letter-spacing:-1px; }
+.bank-mark--nubank { color:#820ad1; }
+.bank-mark--picpay { color:#126a3c; }
+.bank-mark--pan { color:#0064a3; font-size:12px; letter-spacing:-.5px; }
+.bank-filter .bank-mark { width:27px; height:27px; flex-basis:27px; font-size:16px; }
+.bank-filter .bank-mark--pan { font-size:10px; }
+.transactions-page #transactionResults { background:transparent; padding:0; border:0; }
+.transactions-page .transactions-table { width:100%; border-collapse:separate; border-spacing:0 12px; table-layout:auto; font-size:.875rem; }
+.transactions-page .transactions-table th { padding:0 14px 4px; text-align:left; }
+.transactions-page .transactions-table th.align-right { text-align:right; }
+.transactions-page .transactions-table th:nth-child(3) { white-space:nowrap; }
+.transactions-page .transactions-table th:last-child { min-width:140px; }
+.transactions-page .transactions-table td { padding:18px 14px; border:0; background:var(--bank-fill); color:var(--bank-text); }
+.transactions-page .transactions-table td:first-child { border-radius:15px 0 0 15px; }
+.transactions-page .transactions-table td:last-child { border-radius:0 15px 15px 0; }
+.bank-row { --bank-fill:var(--bg-card, #151e2b); --bank-text:var(--text-primary); }
+.bank-row--nubank { --bank-fill:#7807bd; --bank-text:#fff; }
+.bank-row--picpay { --bank-fill:#106b40; --bank-text:#fff; }
+.bank-row--pan { --bank-fill:#0066a7; --bank-text:#fff; }
+.transaction-description { display:flex; align-items:center; gap:16px; min-width:0; }
+.transaction-description > div { min-width:0; overflow-wrap:anywhere; }
+.transaction-description strong { font-size:1rem; }
+.transaction-description small { display:block; margin-top:6px; font-size:.75rem; line-height:1.5; }
+.transaction-icons { display:inline-flex; align-items:center; gap:12px; flex-shrink:0; }
+.transaction-icons > svg { width:28px; height:28px; }
+.payment-badge { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px; border-radius:11px; font-size:.75rem; font-weight:700; white-space:nowrap; line-height:1.3; }
+.payment-badge svg { width:18px; height:18px; flex-shrink:0; }
+.payment-badge--pix { background:#d4f7dd; color:#0b5126; }
+.payment-badge--debit { background:#d8edff; color:#073c6c; }
+.payment-badge--credit { background:#efddff; color:#4c0d7c; }
+.payment-badge--pix-credit { background:#ffedc2; color:#623c00; }
+.payment-badge--unknown { background:#e6e8ec; color:#343d4b; }
+.transactions-page .bank-row .tx-amount { white-space:nowrap; color:var(--bank-text); font-weight:700; }
+.transactions-page .bank-row .row-actions { gap:4px; flex-wrap:wrap; }
+.transactions-page .bank-row .row-actions__btn { min-height:44px; color:var(--bank-text); border:1px solid currentColor; background:transparent; padding:6px 9px; }
+.transactions-page .bank-row .row-actions__btn:hover { background:rgba(255,255,255,.15); }
+.transactions-page .transaction-date { white-space:nowrap; }
+.transaction-classification { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.classification-hint { color:var(--text-secondary); font-size:.8125rem; line-height:1.5; margin:0; }
+.transaction-empty { text-align:center; padding:28px!important; }
+.transactions-page :is(button, summary):focus-visible { outline:3px solid var(--gold); outline-offset:4px; }
+[data-theme="light"] .bank-row--manual { --bank-fill:#ece9e2; --bank-text:#152030; }
+@media (max-width:1100px) and (min-width:901px) {
+  .transactions-page .transaction-icons { flex-direction:column; gap:6px; }
+  .transactions-page .transactions-table td { padding:12px 8px; }
+}
+@media (max-width:900px) {
+  .transactions-page .transaction-table-desktop { display:none; }
+  .transactions-page .mobile-transaction-list { display:grid; gap:12px; }
+  .transactions-page .bank-filters { flex-wrap:nowrap; overflow-x:auto; padding:4px 2px 8px; }
+  .transactions-page .bank-filter { flex-shrink:0; }
+  .transactions-page #mobileFiltersBtn { display:block; }
+  .transactions-page #transactionFilters:not(.is-expanded) { display:none; }
+  .transactions-page .mobile-transaction { border:0; border-radius:16px; background:var(--bank-fill); color:var(--bank-text); overflow:hidden; }
+  .transactions-page .mobile-transaction > summary { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; min-height:100px; padding:16px; list-style:none; cursor:pointer; }
+  .transactions-page .mobile-transaction > summary::-webkit-details-marker { display:none; }
+  .transactions-page .mobile-transaction .transaction-icons { grid-column:1; grid-row:1 / 3; gap:7px; }
+  .transactions-page .transaction-icons > svg { width:22px; height:22px; }
+  .transactions-page .bank-mark { width:30px; height:30px; flex-basis:30px; font-size:18px; }
+  .transactions-page .bank-mark--pan { font-size:10px; }
+  .transactions-page .mobile-transaction__name { display:grid; gap:5px; min-width:0; grid-column:2; grid-row:1 / 3; overflow-wrap:anywhere; }
+  .transactions-page .mobile-transaction__name strong { font-size:.9375rem; line-height:1.4; }
+  .transactions-page .mobile-transaction__name small { color:inherit; font-size:.75rem; line-height:1.5; }
+  .transactions-page .mobile-transaction .tx-amount { grid-column:3; grid-row:1; font-size:1rem; text-align:right; }
+  .transactions-page .mobile-transaction__payment { grid-column:3; grid-row:2; justify-self:end; }
+  .transactions-page .mobile-transaction__chevron { grid-column:3; color:inherit; justify-self:end; font-size:18px; }
+  .transactions-page .mobile-transaction[open] .mobile-transaction__chevron { transform:rotate(180deg); }
+  .transactions-page .mobile-transaction__details { border-top:1px solid rgba(255,255,255,.3); padding:12px 16px; color:inherit; overflow-wrap:anywhere; font-size:.875rem; }
+  .transactions-page .mobile-transaction__details p { margin:0 0 12px; }
+  .transactions-page .mobile-transaction__details .row-actions { justify-content:flex-start; }
+}
+@media (max-width:480px) {
+  .transactions-page .main { padding-inline:14px; }
+  .transactions-page .topbar { align-items:stretch; }
+  .transactions-page .mobile-transaction > summary { padding:13px 12px; grid-template-columns:minmax(0,1fr) auto; gap:8px 10px; }
+  .transactions-page .mobile-transaction .transaction-icons { grid-column:1; grid-row:1; }
+  .transactions-page .mobile-transaction .tx-amount { grid-column:2; grid-row:1; }
+  .transactions-page .mobile-transaction__name { grid-column:1; grid-row:2 / 4; }
+  .transactions-page .mobile-transaction__payment { grid-column:2; grid-row:2; }
+  .transactions-page .mobile-transaction__chevron { grid-column:2; grid-row:3; }
+  .transactions-page .bank-filters { gap:7px; }
+  .transactions-page .bank-filter { padding:6px 10px; font-size:.8125rem; }
+  .transactions-page .payment-badge { padding:6px 8px; font-size:.6875rem; }
+  .transactions-page .transaction-classification { grid-template-columns:1fr; }
+}
